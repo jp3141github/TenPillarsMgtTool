@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Download, Settings, RefreshCw, ChevronLeft, Upload, Moon, Sun, Search, X, Undo2, Redo2 } from 'lucide-react';
+import { Plus, Trash2, Download, Settings, RefreshCw, ChevronLeft, Upload, Moon, Sun, Search, X, Undo2, Redo2, Briefcase } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import ListTable from '@/components/ListTable';
 import AddListModal from '@/components/AddListModal';
@@ -11,6 +11,7 @@ import EditListModal from '@/components/EditListModal';
 import CSVImportModal from '@/components/CSVImportModal';
 import BulkCSVImportModal from '@/components/BulkCSVImportModal';
 import TOMSection from '@/components/TOMSection';
+import CorporateMode from '@/components/CorporateMode';
 import TeamsChannelChat from '@/components/TeamsChannelChat';
 import { DashboardData, List as DataList, ChannelMessage, ChannelInfo } from '@/lib/types';
 import { DEFAULT_PILLARS, saveData, loadData, getStorageUsage } from '@/lib/storage';
@@ -58,7 +59,7 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [currentPillar, setCurrentPillar] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeView, setActiveView] = useState<'pillars' | 'tom'>('pillars');
+  const [activeView, setActiveView] = useState<'pillars' | 'tom' | 'corporate'>('pillars');
 
   // Modal state
   const [showAddListModal, setShowAddListModal] = useState(false);
@@ -479,6 +480,8 @@ export default function Dashboard() {
             <span className="text-sm text-muted-foreground">
               {activeView === 'tom'
                 ? '🏗️ Target Operating Model'
+                : activeView === 'corporate'
+                ? '🏢 Corporate Mode'
                 : pillar && `${pillar.icon} ${pillar.name}`}
             </span>
           </div>
@@ -515,6 +518,16 @@ export default function Dashboard() {
                 <Redo2 className="w-4 h-4" />
               </Button>
             </div>
+            <Button
+              variant={activeView === 'corporate' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveView(activeView === 'corporate' ? 'pillars' : 'corporate')}
+              className="gap-2"
+              title={activeView === 'corporate' ? 'Exit Corporate Mode' : 'Switch to Corporate Mode'}
+            >
+              <Briefcase className="w-4 h-4" />
+              {activeView === 'corporate' ? 'Exit Corporate' : 'Corporate'}
+            </Button>
             <Button variant="ghost" size="sm" onClick={toggleTheme} className="gap-2" title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
               {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </Button>
@@ -526,7 +539,9 @@ export default function Dashboard() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
-          {activeView === 'tom' ? (
+          {activeView === 'corporate' ? (
+            <CorporateMode />
+          ) : activeView === 'tom' ? (
             <TOMSection onOpenChannel={handleOpenChannel} />
           ) : allLists.length === 0 ? (
             <Card className="border-dashed">

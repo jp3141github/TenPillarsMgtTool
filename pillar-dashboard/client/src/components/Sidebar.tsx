@@ -35,8 +35,8 @@ interface SidebarProps {
   totalLists: number;
   totalRows: number;
   dashboardData?: DashboardData;
-  activeView?: 'pillars' | 'tom';
-  onSelectView?: (view: 'pillars' | 'tom') => void;
+  activeView?: 'pillars' | 'tom' | 'corporate';
+  onSelectView?: (view: 'pillars' | 'tom' | 'corporate') => void;
   openChannelNumber?: string | null;
   onOpenChannel?: (channelNumber: string) => void;
 }
@@ -122,6 +122,25 @@ export default function Sidebar({
             >
               <span className="text-lg">🏗️</span>
               <span className="flex-1 text-left truncate">TOM (15 Stages)</span>
+            </button>
+          </nav>
+
+          {/* Corporate Mode */}
+          <div className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2 mt-4 tracking-wider border-t border-border pt-3">
+            Corporate
+          </div>
+          <nav className="space-y-1">
+            <button
+              onClick={() => onSelectView?.('corporate')}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                activeView === 'corporate'
+                  ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                  : 'text-foreground hover:bg-muted'
+              )}
+            >
+              <span className="text-lg">🏢</span>
+              <span className="flex-1 text-left truncate">Corporate Mode</span>
             </button>
           </nav>
 
