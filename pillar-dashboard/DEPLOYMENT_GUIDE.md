@@ -26,9 +26,9 @@ git push -u origin main
 3. Select GitHub and authorize Netlify
 4. Choose your `pillar-dashboard` repository
 5. Configure build settings:
-   - **Build command:** `pnpm build`
-   - **Publish directory:** `dist`
-   - **Node version:** 22.13.0
+   - **Build command:** `pnpm install && pnpm build`
+   - **Publish directory:** `dist/public`
+   - **Node version:** 22
 6. Click "Deploy site"
 
 #### Option B: Using Netlify CLI
