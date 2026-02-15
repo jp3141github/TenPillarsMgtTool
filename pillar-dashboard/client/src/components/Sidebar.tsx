@@ -1,5 +1,6 @@
-import { Pillar } from '@/lib/types';
+import { Pillar, DashboardData } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import PillarChart from './PillarChart';
 
 interface SidebarProps {
   pillars: Pillar[];
@@ -8,6 +9,7 @@ interface SidebarProps {
   totalPillars: number;
   totalLists: number;
   totalRows: number;
+  dashboardData?: DashboardData;
 }
 
 export default function Sidebar({
@@ -17,6 +19,7 @@ export default function Sidebar({
   totalPillars,
   totalLists,
   totalRows,
+  dashboardData,
 }: SidebarProps) {
   return (
     <div className="w-72 bg-card border-r border-border flex flex-col flex-shrink-0">
@@ -28,7 +31,7 @@ export default function Sidebar({
           </div>
           <h1 className="font-semibold text-foreground">Pillar Dashboard</h1>
         </div>
-        
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 text-xs">
           <div className="bg-muted p-2 rounded">
@@ -71,6 +74,9 @@ export default function Sidebar({
           </nav>
         </div>
       </div>
+
+      {/* Chart */}
+      {dashboardData && <PillarChart data={dashboardData} />}
 
       {/* Footer */}
       <div className="p-4 border-t border-border text-xs text-muted-foreground">
