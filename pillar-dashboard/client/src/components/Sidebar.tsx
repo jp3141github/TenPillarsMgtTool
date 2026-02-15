@@ -55,7 +55,7 @@ export default function Sidebar({
   onOpenChannel,
 }: SidebarProps) {
   return (
-    <div className="w-72 bg-card border-r border-border flex flex-col flex-shrink-0">
+    <div className="w-72 h-full bg-card border-r border-border flex flex-col flex-shrink-0">
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-3 mb-4">
