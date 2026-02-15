@@ -254,7 +254,11 @@ const TOM_STAGES: TOMStage[] = [
   },
 ];
 
-export default function TOMSection() {
+interface TOMSectionProps {
+  onOpenChannel?: (channelNumber: string) => void;
+}
+
+export default function TOMSection({ onOpenChannel }: TOMSectionProps) {
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -305,7 +309,11 @@ export default function TOMSection() {
         <h3 className="text-lg font-semibold text-foreground mb-4">Teams Channel Layout</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {CHANNELS.map(ch => (
-            <Card key={ch.number} className="relative overflow-hidden">
+            <Card
+              key={ch.number}
+              className="relative overflow-hidden cursor-pointer transition-shadow hover:shadow-md hover:ring-1 hover:ring-primary/30"
+              onClick={() => onOpenChannel?.(ch.number)}
+            >
               <div className={`absolute top-0 left-0 w-1 h-full ${CHANNEL_COLORS[ch.number]?.split(' ')[0] || 'bg-primary'}`} />
               <CardContent className="pt-4 pl-5">
                 <div className="flex items-center gap-2 mb-2">
@@ -319,6 +327,9 @@ export default function TOMSection() {
             </Card>
           ))}
         </div>
+        <p className="text-sm italic text-muted-foreground mt-3">
+          ABCD = Approved / Blocked / Changed / Delivered
+        </p>
       </div>
 
       {/* 15 Stages */}

@@ -24,3 +24,16 @@ export interface DashboardData {
   pillars: Pillar[];
   data: Record<string, SheetData>;
 }
+
+export interface ChannelMessage {
+  id: string;
+  text: string;
+  timestamp: string;
+  author: string;
+}
+
+export interface ChannelInfo {
+  number: string;
+  name: string;
+  description: string;
+}
