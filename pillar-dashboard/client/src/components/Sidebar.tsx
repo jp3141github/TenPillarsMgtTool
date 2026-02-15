@@ -1,6 +1,31 @@
-import { Pillar, DashboardData } from '@/lib/types';
+import { Pillar, DashboardData, ChannelInfo } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { Hash } from 'lucide-react';
 import PillarChart from './PillarChart';
+
+const SIDEBAR_CHANNELS: ChannelInfo[] = [
+  { number: 'I', name: 'Noticeboard (ABCD)', description: 'Exec-facing broadcast layer' },
+  { number: 'II', name: 'ICP', description: 'The only front door' },
+  { number: 'III', name: 'Delivery', description: 'Production floor' },
+  { number: 'IV', name: 'QACE', description: 'Controls and evidence' },
+  { number: 'V', name: 'ORM', description: 'Runbooks and recovery' },
+];
+
+const SIDEBAR_CHANNEL_COLORS: Record<string, string> = {
+  'I': 'text-violet-600 dark:text-violet-400',
+  'II': 'text-blue-600 dark:text-blue-400',
+  'III': 'text-emerald-600 dark:text-emerald-400',
+  'IV': 'text-amber-600 dark:text-amber-400',
+  'V': 'text-rose-600 dark:text-rose-400',
+};
+
+const SIDEBAR_CHANNEL_ACTIVE: Record<string, string> = {
+  'I': 'bg-violet-500/10 border-violet-500',
+  'II': 'bg-blue-500/10 border-blue-500',
+  'III': 'bg-emerald-500/10 border-emerald-500',
+  'IV': 'bg-amber-500/10 border-amber-500',
+  'V': 'bg-rose-500/10 border-rose-500',
+};
 
 interface SidebarProps {
   pillars: Pillar[];
@@ -12,6 +37,8 @@ interface SidebarProps {
   dashboardData?: DashboardData;
   activeView?: 'pillars' | 'tom';
   onSelectView?: (view: 'pillars' | 'tom') => void;
+  openChannelNumber?: string | null;
+  onOpenChannel?: (channelNumber: string) => void;
 }
 
 export default function Sidebar({
@@ -24,6 +51,8 @@ export default function Sidebar({
   dashboardData,
   activeView = 'pillars',
   onSelectView,
+  openChannelNumber,
+  onOpenChannel,
 }: SidebarProps) {
   return (
     <div className="w-72 bg-card border-r border-border flex flex-col flex-shrink-0">
@@ -94,6 +123,28 @@ export default function Sidebar({
               <span className="text-lg">🏗️</span>
               <span className="flex-1 text-left truncate">TOM (15 Stages)</span>
             </button>
+          </nav>
+
+          {/* Teams Channels */}
+          <div className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2 mt-4 tracking-wider border-t border-border pt-3">
+            Teams Channels
+          </div>
+          <nav className="space-y-0.5">
+            {SIDEBAR_CHANNELS.map(ch => (
+              <button
+                key={ch.number}
+                onClick={() => onOpenChannel?.(ch.number)}
+                className={cn(
+                  'w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                  openChannelNumber === ch.number
+                    ? `${SIDEBAR_CHANNEL_ACTIVE[ch.number]} border-l-2`
+                    : 'text-foreground hover:bg-muted'
+                )}
+              >
+                <Hash className={cn('w-3.5 h-3.5 shrink-0', SIDEBAR_CHANNEL_COLORS[ch.number])} />
+                <span className="flex-1 text-left truncate text-xs">{ch.number} - {ch.name}</span>
+              </button>
+            ))}
           </nav>
         </div>
       </div>

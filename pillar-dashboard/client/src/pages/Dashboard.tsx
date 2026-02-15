@@ -11,10 +11,35 @@ import EditListModal from '@/components/EditListModal';
 import CSVImportModal from '@/components/CSVImportModal';
 import BulkCSVImportModal from '@/components/BulkCSVImportModal';
 import TOMSection from '@/components/TOMSection';
-import { DashboardData, List as DataList } from '@/lib/types';
+import TeamsChannelChat from '@/components/TeamsChannelChat';
+import { DashboardData, List as DataList, ChannelMessage, ChannelInfo } from '@/lib/types';
 import { DEFAULT_PILLARS, saveData, loadData, getStorageUsage } from '@/lib/storage';
 import { parseCSV, exportToCSV, downloadCSV } from '@/lib/csv';
 import { useTheme } from '@/contexts/ThemeContext';
+
+const CHANNELS: ChannelInfo[] = [
+  { number: 'I', name: 'Noticeboard (ABCD)', description: 'Exec-facing broadcast layer, the published truth with links out.' },
+  { number: 'II', name: 'ICP', description: 'The only front door. If it isn\'t logged, it isn\'t real work.' },
+  { number: 'III', name: 'Delivery', description: 'Production floor (Planner/tasks, blockers, WIP discipline).' },
+  { number: 'IV', name: 'QACE', description: 'Controls and evidence. No "trust me bro".' },
+  { number: 'V', name: 'ORM', description: 'Runbooks, recovery playbooks, "how to not die at close".' },
+];
+
+const CHANNEL_MESSAGES_KEY = 'pillar-dashboard-channel-messages';
+
+function loadChannelMessages(): Record<string, ChannelMessage[]> {
+  try {
+    const stored = localStorage.getItem(CHANNEL_MESSAGES_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return {};
+}
+
+function saveChannelMessages(messages: Record<string, ChannelMessage[]>): void {
+  try {
+    localStorage.setItem(CHANNEL_MESSAGES_KEY, JSON.stringify(messages));
+  } catch { /* ignore quota errors */ }
+}
 
 function formatDate(isoString: string): string {
   if (!isoString) return 'Never';
@@ -42,6 +67,34 @@ export default function Dashboard() {
   const [showCSVModal, setShowCSVModal] = useState(false);
   const [showBulkCSVModal, setShowBulkCSVModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Channel chat state
+  const [openChannelNumber, setOpenChannelNumber] = useState<string | null>(null);
+  const [channelMessages, setChannelMessages] = useState<Record<string, ChannelMessage[]>>(() => loadChannelMessages());
+
+  const openChannel = CHANNELS.find(ch => ch.number === openChannelNumber) || null;
+
+  const handleOpenChannel = useCallback((channelNumber: string) => {
+    setOpenChannelNumber(prev => prev === channelNumber ? null : channelNumber);
+  }, []);
+
+  const handleSendMessage = useCallback((channelNumber: string, text: string) => {
+    const msg: ChannelMessage = {
+      id: Date.now().toString() + Math.random().toString(36).slice(2),
+      text,
+      timestamp: new Date().toISOString(),
+      author: 'You',
+    };
+    setChannelMessages(prev => {
+      const updated = { ...prev, [channelNumber]: [...(prev[channelNumber] || []), msg] };
+      saveChannelMessages(updated);
+      return updated;
+    });
+  }, []);
+
+  const handleCloseChannel = useCallback(() => {
+    setOpenChannelNumber(null);
+  }, []);
 
   // Undo/redo history
   const MAX_HISTORY = 50;
@@ -405,6 +458,8 @@ export default function Dashboard() {
           dashboardData={data}
           activeView={activeView}
           onSelectView={setActiveView}
+          openChannelNumber={openChannelNumber}
+          onOpenChannel={handleOpenChannel}
         />
       )}
 
@@ -472,7 +527,7 @@ export default function Dashboard() {
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
           {activeView === 'tom' ? (
-            <TOMSection />
+            <TOMSection onOpenChannel={handleOpenChannel} />
           ) : allLists.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="pt-12 pb-12 text-center">
@@ -535,6 +590,16 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Channel Chat Panel */}
+      {openChannel && (
+        <TeamsChannelChat
+          channel={openChannel}
+          messages={channelMessages[openChannel.number] || []}
+          onSendMessage={handleSendMessage}
+          onClose={handleCloseChannel}
+        />
+      )}
 
       <AddListModal
         open={showAddListModal}
