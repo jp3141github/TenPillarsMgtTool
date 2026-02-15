@@ -9,7 +9,6 @@
 
 ### Step 2: Push Code to GitHub
 ```bash
-cd pillar-dashboard
 git init
 git add .
 git commit -m "Initial commit: 10-Pillar Management Dashboard"
@@ -20,21 +19,19 @@ git push -u origin main
 
 ### Step 3: Deploy to Netlify
 
+The repository includes a `netlify.toml` at the root that configures the build automatically. It sets the base directory to `pillar-dashboard/`, runs `pnpm install && pnpm build`, publishes from `dist/public` (matching the Vite output directory), and includes a SPA redirect rule for client-side routing.
+
 #### Option A: Using Netlify UI (Easiest)
 1. Go to [netlify.com](https://netlify.com) and sign up/login
 2. Click "Add new site" → "Import an existing project"
 3. Select GitHub and authorize Netlify
-4. Choose your `pillar-dashboard` repository
-5. Configure build settings:
-   - **Build command:** `pnpm build`
-   - **Publish directory:** `dist`
-   - **Node version:** 22.13.0
+4. Choose your repository
+5. Build settings will be auto-detected from `netlify.toml` — no manual configuration needed
 6. Click "Deploy site"
 
 #### Option B: Using Netlify CLI
 ```bash
 npm install -g netlify-cli
-cd pillar-dashboard
 netlify login
 netlify init
 # Follow prompts and deploy
@@ -72,21 +69,22 @@ pnpm preview
 
 ### Project Structure
 ```
-pillar-dashboard/
-├── client/
-│   ├── public/           # Static assets
-│   ├── src/
-│   │   ├── components/   # Reusable UI components
-│   │   ├── pages/        # Page components (Dashboard)
-│   │   ├── lib/          # Utilities (types, storage)
-│   │   ├── App.tsx       # Main app component
-│   │   ├── main.tsx      # React entry point
-│   │   └── index.css     # Global styles
-│   └── index.html        # HTML template
-├── server/               # Express server for production
-├── package.json          # Dependencies
-├── vite.config.ts        # Vite configuration
-└── tsconfig.json         # TypeScript configuration
+├── netlify.toml              # Netlify build & deploy configuration
+└── pillar-dashboard/
+    ├── client/
+    │   ├── public/           # Static assets
+    │   ├── src/
+    │   │   ├── components/   # Reusable UI components
+    │   │   ├── pages/        # Page components (Dashboard)
+    │   │   ├── lib/          # Utilities (types, storage)
+    │   │   ├── App.tsx       # Main app component
+    │   │   ├── main.tsx      # React entry point
+    │   │   └── index.css     # Global styles
+    │   └── index.html        # HTML template
+    ├── server/               # Express server (dev only, not used on Netlify)
+    ├── package.json          # Dependencies
+    ├── vite.config.ts        # Vite configuration
+    └── tsconfig.json         # TypeScript configuration
 ```
 
 ### Troubleshooting
@@ -99,7 +97,7 @@ pillar-dashboard/
 - Check build logs in Netlify dashboard
 - Ensure Node version is 22.x or higher
 - Verify `pnpm` is available in build environment
-- Add `pnpm` to build command if needed: `npm install -g pnpm && pnpm build`
+- Ensure the `netlify.toml` at the repository root is present — it configures the base directory, build command, and publish directory automatically
 
 **Data not persisting**
 - Dashboard uses browser localStorage
