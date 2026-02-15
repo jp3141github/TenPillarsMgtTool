@@ -5,6 +5,7 @@ import Dashboard from "@/pages/Dashboard";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { LayoutProvider } from "./contexts/LayoutContext";
 
 
 function Router() {
@@ -25,10 +26,12 @@ function App() {
         defaultTheme="light"
         switchable
       >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <LayoutProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </LayoutProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
