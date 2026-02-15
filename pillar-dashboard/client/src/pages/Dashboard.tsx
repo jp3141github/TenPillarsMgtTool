@@ -10,6 +10,7 @@ import AddListModal from '@/components/AddListModal';
 import EditListModal from '@/components/EditListModal';
 import CSVImportModal from '@/components/CSVImportModal';
 import BulkCSVImportModal from '@/components/BulkCSVImportModal';
+import TOMSection from '@/components/TOMSection';
 import { DashboardData, List as DataList } from '@/lib/types';
 import { DEFAULT_PILLARS, saveData, loadData, getStorageUsage } from '@/lib/storage';
 import { parseCSV, exportToCSV, downloadCSV } from '@/lib/csv';
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [currentPillar, setCurrentPillar] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeView, setActiveView] = useState<'pillars' | 'tom'>('pillars');
 
   // Modal state
   const [showAddListModal, setShowAddListModal] = useState(false);
@@ -401,6 +403,8 @@ export default function Dashboard() {
           totalLists={totalLists}
           totalRows={totalRows}
           dashboardData={data}
+          activeView={activeView}
+          onSelectView={setActiveView}
         />
       )}
 
@@ -418,7 +422,9 @@ export default function Dashboard() {
               <ChevronLeft className={`w-4 h-4 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
             </Button>
             <span className="text-sm text-muted-foreground">
-              {pillar && `${pillar.icon} ${pillar.name}`}
+              {activeView === 'tom'
+                ? '🏗️ Target Operating Model'
+                : pillar && `${pillar.icon} ${pillar.name}`}
             </span>
           </div>
           <div className="flex gap-2 items-center">
@@ -465,7 +471,9 @@ export default function Dashboard() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
-          {allLists.length === 0 ? (
+          {activeView === 'tom' ? (
+            <TOMSection />
+          ) : allLists.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="pt-12 pb-12 text-center">
                 <p className="text-muted-foreground mb-4">No lists yet. Create your first list to get started.</p>

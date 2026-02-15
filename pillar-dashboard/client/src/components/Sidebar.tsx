@@ -10,6 +10,8 @@ interface SidebarProps {
   totalLists: number;
   totalRows: number;
   dashboardData?: DashboardData;
+  activeView?: 'pillars' | 'tom';
+  onSelectView?: (view: 'pillars' | 'tom') => void;
 }
 
 export default function Sidebar({
@@ -20,6 +22,8 @@ export default function Sidebar({
   totalLists,
   totalRows,
   dashboardData,
+  activeView = 'pillars',
+  onSelectView,
 }: SidebarProps) {
   return (
     <div className="w-72 bg-card border-r border-border flex flex-col flex-shrink-0">
@@ -59,10 +63,10 @@ export default function Sidebar({
             {pillars.map(pillar => (
               <button
                 key={pillar.id}
-                onClick={() => onSelectPillar(pillar.id)}
+                onClick={() => { onSelectPillar(pillar.id); onSelectView?.('pillars'); }}
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                  currentPillar === pillar.id
+                  activeView === 'pillars' && currentPillar === pillar.id
                     ? 'bg-primary/10 text-primary border-l-2 border-primary'
                     : 'text-foreground hover:bg-muted'
                 )}
@@ -71,6 +75,25 @@ export default function Sidebar({
                 <span className="flex-1 text-left truncate">{pillar.name}</span>
               </button>
             ))}
+          </nav>
+
+          {/* TOM Section */}
+          <div className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2 mt-4 tracking-wider border-t border-border pt-3">
+            Operating Model
+          </div>
+          <nav className="space-y-1">
+            <button
+              onClick={() => onSelectView?.('tom')}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                activeView === 'tom'
+                  ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                  : 'text-foreground hover:bg-muted'
+              )}
+            >
+              <span className="text-lg">🏗️</span>
+              <span className="flex-1 text-left truncate">TOM (15 Stages)</span>
+            </button>
           </nav>
         </div>
       </div>
