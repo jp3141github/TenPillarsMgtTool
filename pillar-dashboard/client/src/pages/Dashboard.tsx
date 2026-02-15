@@ -1,59 +1,102 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Plus, Trash2, Download, Settings, RefreshCw, ChevronLeft, Upload, Moon, Sun } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Trash2, Download, Settings, RefreshCw, ChevronLeft, Upload, Moon, Sun, Search, X, Undo2, Redo2 } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import ListTable from '@/components/ListTable';
-import { DashboardData, Pillar, List as DataList } from '@/lib/types';
-import { initializeData, saveData, loadData } from '@/lib/storage';
+import AddListModal from '@/components/AddListModal';
+import EditListModal from '@/components/EditListModal';
+import CSVImportModal from '@/components/CSVImportModal';
+import BulkCSVImportModal from '@/components/BulkCSVImportModal';
+import { DashboardData, List as DataList } from '@/lib/types';
+import { DEFAULT_PILLARS, saveData, loadData, getStorageUsage } from '@/lib/storage';
+import { parseCSV, exportToCSV, downloadCSV } from '@/lib/csv';
 import { useTheme } from '@/contexts/ThemeContext';
 
-const DEFAULT_PILLARS: Pillar[] = [
-  { id: 'pillar1', name: 'BAU (deadlines)', color: '#0078d4', icon: '📋' },
-  { id: 'pillar2', name: 'C.I. (Dev)', color: '#107c10', icon: '💻' },
-  { id: 'pillar3', name: 'Comms (Internal)', color: '#ffc107', icon: '💬' },
-  { id: 'pillar4', name: 'Data', color: '#d13438', icon: '📊' },
-  { id: 'pillar5', name: 'Doc / Gov / Ctrls', color: '#ff8c00', icon: '📋' },
-  { id: 'pillar6', name: 'KPIs', color: '#8764b8', icon: '📈' },
-  { id: 'pillar7', name: 'People (Funds)', color: '#0078d4', icon: '👥' },
-  { id: 'pillar8', name: 'Risk Mgt', color: '#00b7c3', icon: '⚠️' },
-  { id: 'pillar9', name: 'Stakeholders', color: '#107c10', icon: '🤝' },
-  { id: 'pillar10', name: 'Tech', color: '#6b69d6', icon: '🔧' },
-];
+function formatDate(isoString: string): string {
+  if (!isoString) return 'Never';
+  const date = new Date(isoString);
+  const now = new Date();
+  const diff = (now.getTime() - date.getTime()) / 1000;
+
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return date.toLocaleDateString();
+}
 
 export default function Dashboard() {
   const { theme, toggleTheme } = useTheme();
   const [data, setData] = useState<DashboardData | null>(null);
   const [currentPillar, setCurrentPillar] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Modal state
   const [showAddListModal, setShowAddListModal] = useState(false);
   const [showEditListModal, setShowEditListModal] = useState(false);
   const [editingListIndex, setEditingListIndex] = useState<number | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showCSVModal, setShowCSVModal] = useState(false);
-  const [csvUploadMode, setCSVUploadMode] = useState<'new' | 'existing'>('new');
-  const [useCSVHeaders, setUseCSVHeaders] = useState(true);
-  const [selectedListForUpload, setSelectedListForUpload] = useState<number | null>(null);
-  
-  // Add List Modal State
-  const [listName, setListName] = useState('');
-  const [colCount, setColCount] = useState(4);
-  const [rowCount, setRowCount] = useState(10);
-  const [colHeaders, setColHeaders] = useState('');
-  
-  // Edit List Modal State
-  const [editListName, setEditListName] = useState('');
-  const [addCols, setAddCols] = useState(0);
-  const [addRows, setAddRows] = useState(0);
-  const [csvFile, setCSVFile] = useState<File | null>(null);
-  const [csvNewListName, setCSVNewListName] = useState('');
   const [showBulkCSVModal, setShowBulkCSVModal] = useState(false);
-  const [bulkCSVFiles, setBulkCSVFiles] = useState<File[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Initialize data on mount
+  // Undo/redo history
+  const MAX_HISTORY = 50;
+  const undoStack = useRef<string[]>([]);
+  const redoStack = useRef<string[]>([]);
+  const isUndoRedoAction = useRef(false);
+
+  const pushUndo = useCallback((currentData: DashboardData) => {
+    if (isUndoRedoAction.current) return;
+    undoStack.current.push(JSON.stringify(currentData));
+    if (undoStack.current.length > MAX_HISTORY) undoStack.current.shift();
+    redoStack.current = [];
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    if (undoStack.current.length === 0 || !data) return;
+    isUndoRedoAction.current = true;
+    redoStack.current.push(JSON.stringify(data));
+    const prev = JSON.parse(undoStack.current.pop()!);
+    setData(prev);
+    isUndoRedoAction.current = false;
+    toast.success('Undo');
+  }, [data]);
+
+  const handleRedo = useCallback(() => {
+    if (redoStack.current.length === 0 || !data) return;
+    isUndoRedoAction.current = true;
+    undoStack.current.push(JSON.stringify(data));
+    const next = JSON.parse(redoStack.current.pop()!);
+    setData(next);
+    isUndoRedoAction.current = false;
+    toast.success('Redo');
+  }, [data]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (ctrl && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if (ctrl && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        handleRedo();
+      } else if (ctrl && e.key === 'n') {
+        e.preventDefault();
+        setShowAddListModal(true);
+      } else if (ctrl && e.key === 'f') {
+        e.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>('[data-search-input]');
+        searchInput?.focus();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleUndo, handleRedo]);
+
   useEffect(() => {
     const initialData = loadData();
     setData(initialData);
@@ -62,86 +105,96 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Save data whenever it changes
   useEffect(() => {
     if (data) {
-      saveData(data);
+      const result = saveData(data);
+      if (!result.success) {
+        toast.error(result.error || 'Failed to save data');
+      } else {
+        const usage = getStorageUsage();
+        if (usage.usedKB > usage.estimatedMaxKB * 0.8) {
+          toast.warning(`Storage is ${Math.round((usage.usedKB / usage.estimatedMaxKB) * 100)}% full. Consider exporting and removing some lists.`);
+        }
+      }
     }
   }, [data]);
 
-  if (!data) return <div className="flex items-center justify-center h-screen">Loading...</div>;
-
-  const currentPillarData = currentPillar ? data.data[currentPillar] : null;
-  const lists = currentPillarData?.lists || [];
-  const pillar = data.pillars.find(p => p.id === currentPillar);
-
-  const handleAddList = () => {
-    if (!listName.trim()) {
-      toast.error('Please enter a list name');
-      return;
-    }
-
-    if (!currentPillar) {
-      toast.error('Please select a pillar first');
-      return;
-    }
-
-    let headers = colHeaders
-      .split(',')
-      .map(h => h.trim())
-      .filter(h => h)
-      .slice(0, colCount);
-
-    while (headers.length < colCount) {
-      headers.push(`Column ${headers.length + 1}`);
-    }
-
-    const newList: DataList = {
-      id: Date.now().toString(),
-      name: listName,
-      cols: colCount,
-      rows: rowCount,
-      headers,
-      data: Array(rowCount).fill(null).map(() => Array(colCount).fill('')),
-      created: new Date().toISOString(),
-      lastEdited: new Date().toISOString(),
-    };
-
+  const updatePillarLists = useCallback((updater: (lists: DataList[]) => DataList[]) => {
     setData(prev => {
       if (!prev || !currentPillar) return prev;
+      pushUndo(prev);
       return {
         ...prev,
         data: {
           ...prev.data,
           [currentPillar]: {
             ...prev.data[currentPillar],
-            lists: [...prev.data[currentPillar].lists, newList],
+            lists: updater(prev.data[currentPillar].lists),
           },
         },
       };
     });
+  }, [currentPillar, pushUndo]);
 
-    toast.success(`List "${listName}" created`);
+  if (!data) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+
+  const currentPillarData = currentPillar ? data.data[currentPillar] : null;
+  const allLists = currentPillarData?.lists || [];
+  const pillar = data.pillars.find(p => p.id === currentPillar);
+
+  const searchLower = searchQuery.toLowerCase();
+  const filteredIndices = searchQuery
+    ? allLists.reduce<number[]>((acc, list, idx) => {
+        if (
+          list.name.toLowerCase().includes(searchLower) ||
+          list.headers.some(h => h.toLowerCase().includes(searchLower)) ||
+          list.data.some(row => row.some(cell => cell.toLowerCase().includes(searchLower)))
+        ) {
+          acc.push(idx);
+        }
+        return acc;
+      }, [])
+    : allLists.map((_, i) => i);
+  const lists = allLists;
+
+  const handleAddList = (name: string, cols: number, rows: number, headers: string[]) => {
+    if (!name.trim()) {
+      toast.error('Please enter a list name');
+      return;
+    }
+    if (!currentPillar) {
+      toast.error('Please select a pillar first');
+      return;
+    }
+
+    const newList: DataList = {
+      id: Date.now().toString(),
+      name,
+      cols,
+      rows,
+      headers,
+      data: Array(rows).fill(null).map(() => Array(cols).fill('')),
+      created: new Date().toISOString(),
+      lastEdited: new Date().toISOString(),
+    };
+
+    updatePillarLists(prev => [...prev, newList]);
+    toast.success(`List "${name}" created`);
     setShowAddListModal(false);
-    setListName('');
-    setColHeaders('');
-    setColCount(4);
-    setRowCount(10);
   };
 
-  const handleEditList = () => {
+  const handleEditList = (name: string, addCols: number, addRows: number) => {
     if (editingListIndex === null || !currentPillar) return;
 
-    setData(prev => {
-      if (!prev || !currentPillar) return prev;
-      const lists = [...prev.data[currentPillar].lists];
-      const list = lists[editingListIndex];
+    updatePillarLists(prev => {
+      const lists = [...prev];
+      const list = { ...lists[editingListIndex] };
 
-      if (editListName.trim()) {
-        list.name = editListName;
-      }
+      if (name.trim()) list.name = name;
 
       if (addCols > 0) {
+        list.headers = [...list.headers];
+        list.data = list.data.map(row => [...row]);
         for (let i = 0; i < addCols; i++) {
           list.headers.push(`Column ${list.headers.length + 1}`);
           list.data.forEach(row => row.push(''));
@@ -150,6 +203,7 @@ export default function Dashboard() {
       }
 
       if (addRows > 0) {
+        list.data = [...list.data];
         for (let i = 0; i < addRows; i++) {
           list.data.push(Array(list.cols).fill(''));
         }
@@ -157,135 +211,130 @@ export default function Dashboard() {
       }
 
       list.lastEdited = new Date().toISOString();
-
-      return {
-        ...prev,
-        data: {
-          ...prev.data,
-          [currentPillar]: {
-            ...prev.data[currentPillar],
-            lists,
-          },
-        },
-      };
+      lists[editingListIndex] = list;
+      return lists;
     });
 
     toast.success('List updated');
     setShowEditListModal(false);
     setEditingListIndex(null);
-    setEditListName('');
-    setAddCols(0);
-    setAddRows(0);
   };
 
   const handleDeleteList = (index: number) => {
     if (!currentPillar) return;
-    
     const list = lists[index];
     if (confirm(`Delete "${list.name}"? This cannot be undone.`)) {
-      setData(prev => {
-        if (!prev || !currentPillar) return prev;
-        return {
-          ...prev,
-          data: {
-            ...prev.data,
-            [currentPillar]: {
-              ...prev.data[currentPillar],
-              lists: prev.data[currentPillar].lists.filter((_, i) => i !== index),
-            },
-          },
-        };
-      });
+      updatePillarLists(prev => prev.filter((_, i) => i !== index));
       toast.success('List deleted');
     }
   };
 
   const handleUpdateCell = (listIndex: number, rowIndex: number, colIndex: number, value: string) => {
     if (!currentPillar) return;
-
-    setData(prev => {
-      if (!prev || !currentPillar) return prev;
-      const lists = [...prev.data[currentPillar].lists];
-      lists[listIndex].data[rowIndex][colIndex] = value;
-      lists[listIndex].lastEdited = new Date().toISOString();
-
-      return {
-        ...prev,
-        data: {
-          ...prev.data,
-          [currentPillar]: {
-            ...prev.data[currentPillar],
-            lists,
-          },
-        },
-      };
+    updatePillarLists(prev => {
+      const lists = [...prev];
+      const list = { ...lists[listIndex], data: lists[listIndex].data.map(r => [...r]) };
+      list.data[rowIndex][colIndex] = value;
+      list.lastEdited = new Date().toISOString();
+      lists[listIndex] = list;
+      return lists;
     });
   };
 
   const handleUpdateHeader = (listIndex: number, colIndex: number, value: string) => {
     if (!currentPillar) return;
-
-    setData(prev => {
-      if (!prev || !currentPillar) return prev;
-      const lists = [...prev.data[currentPillar].lists];
-      lists[listIndex].headers[colIndex] = value;
-      lists[listIndex].lastEdited = new Date().toISOString();
-
-      return {
-        ...prev,
-        data: {
-          ...prev.data,
-          [currentPillar]: {
-            ...prev.data[currentPillar],
-            lists,
-          },
-        },
-      };
+    updatePillarLists(prev => {
+      const lists = [...prev];
+      const list = { ...lists[listIndex], headers: [...lists[listIndex].headers] };
+      list.headers[colIndex] = value;
+      list.lastEdited = new Date().toISOString();
+      lists[listIndex] = list;
+      return lists;
     });
   };
 
   const handleAddRow = (listIndex: number) => {
     if (!currentPillar) return;
-
-    setData(prev => {
-      if (!prev || !currentPillar) return prev;
-      const lists = [...prev.data[currentPillar].lists];
-      const list = lists[listIndex];
+    updatePillarLists(prev => {
+      const lists = [...prev];
+      const list = { ...lists[listIndex], data: [...lists[listIndex].data] };
       list.data.push(Array(list.cols).fill(''));
       list.rows++;
       list.lastEdited = new Date().toISOString();
-
-      return {
-        ...prev,
-        data: {
-          ...prev.data,
-          [currentPillar]: {
-            ...prev.data[currentPillar],
-            lists,
-          },
-        },
-      };
+      lists[listIndex] = list;
+      return lists;
     });
     toast.success('Row added');
   };
 
   const handleExportCSV = (listIndex: number) => {
     const list = lists[listIndex];
-    let csv = list.headers.join(',') + '\n';
-    list.data.forEach(row => {
-      csv += row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(',') + '\n';
-    });
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${list.name}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const csv = exportToCSV(list.headers, list.data);
+    downloadCSV(`${list.name}.csv`, csv);
     toast.success(`"${list.name}" exported to CSV`);
+  };
+
+  const handleCSVImportNew = (file: File, name: string, useHeaders: boolean) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const { headers, rows } = parseCSV(text);
+        const finalHeaders = useHeaders ? headers : Array.from({ length: headers.length }, (_, i) => `Column ${i + 1}`);
+        const finalRows = useHeaders ? rows : [headers, ...rows];
+
+        const newList: DataList = {
+          id: Date.now().toString(),
+          name: name || 'Imported List',
+          cols: finalHeaders.length,
+          rows: finalRows.length,
+          headers: finalHeaders,
+          data: finalRows.map(row => {
+            const rowData = [...row];
+            while (rowData.length < finalHeaders.length) rowData.push('');
+            return rowData.slice(0, finalHeaders.length);
+          }),
+          created: new Date().toISOString(),
+          lastEdited: new Date().toISOString(),
+        };
+
+        updatePillarLists(prev => [...prev, newList]);
+        toast.success(`List "${newList.name}" created from CSV`);
+      } catch {
+        toast.error('Error parsing CSV file');
+      }
+    };
+    reader.readAsText(file);
+    setShowCSVModal(false);
+  };
+
+  const handleCSVImportExisting = (file: File, listIndex: number) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const { rows } = parseCSV(text);
+
+        updatePillarLists(prev => {
+          const lists = [...prev];
+          const list = { ...lists[listIndex] };
+          list.data = rows.map(row => {
+            const rowData = [...row];
+            while (rowData.length < list.cols) rowData.push('');
+            return rowData.slice(0, list.cols);
+          });
+          list.rows = list.data.length;
+          list.lastEdited = new Date().toISOString();
+          lists[listIndex] = list;
+          return lists;
+        });
+        toast.success('Data uploaded to existing list');
+      } catch {
+        toast.error('Error parsing CSV file');
+      }
+    };
+    reader.readAsText(file);
+    setShowCSVModal(false);
   };
 
   const handleBulkCSVUpload = async (files: File[]) => {
@@ -303,7 +352,7 @@ export default function Dashboard() {
           name: fileName,
           cols: headers.length,
           rows: rows.length,
-          headers: headers,
+          headers,
           data: rows.map(row => {
             const rowData = [...row];
             while (rowData.length < headers.length) rowData.push('');
@@ -313,135 +362,27 @@ export default function Dashboard() {
           lastEdited: new Date().toISOString(),
         };
 
-        setData(prev => {
-          if (!prev || !currentPillar) return prev;
-          const lists = [...prev.data[currentPillar].lists, newList];
-          return {
-            ...prev,
-            data: {
-              ...prev.data,
-              [currentPillar]: { lists },
-            },
-          };
-        });
+        updatePillarLists(prev => [...prev, newList]);
         successCount++;
-      } catch (error) {
+      } catch {
         errorCount++;
       }
     }
 
-    if (successCount > 0) {
-      toast.success(`Imported ${successCount} list(s) successfully`);
-    }
-    if (errorCount > 0) {
-      toast.error(`Failed to import ${errorCount} file(s)`);
-    }
-
+    if (successCount > 0) toast.success(`Imported ${successCount} list(s) successfully`);
+    if (errorCount > 0) toast.error(`Failed to import ${errorCount} file(s)`);
     setShowBulkCSVModal(false);
-    setBulkCSVFiles([]);
   };
 
   const handleResetToDefaults = () => {
     if (confirm('This will delete all your data and reset to default pillars. Are you sure?')) {
-      const newData: DashboardData = {
-        pillars: DEFAULT_PILLARS,
-        data: {},
-      };
-      DEFAULT_PILLARS.forEach(pillar => {
-        newData.data[pillar.id] = { lists: [] };
-      });
+      if (data) pushUndo(data);
+      const newData: DashboardData = { pillars: DEFAULT_PILLARS, data: {} };
+      DEFAULT_PILLARS.forEach(p => { newData.data[p.id] = { lists: [] }; });
       setData(newData);
       setCurrentPillar(DEFAULT_PILLARS[0].id);
       toast.success('Dashboard reset to defaults');
     }
-  };
-
-  const parseCSV = (text: string): { headers: string[]; rows: string[][] } => {
-    const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim());
-    const rows = lines.slice(1).map(line => 
-      line.split(',').map(cell => cell.trim())
-    );
-    return { headers, rows };
-  };
-
-  const handleCSVUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result as string;
-        const { headers, rows } = parseCSV(text);
-
-        if (csvUploadMode === 'new') {
-          // Create new list from CSV
-          const finalHeaders = useCSVHeaders ? headers : Array.from({ length: headers.length }, (_, i) => `Column ${i + 1}`);
-          const finalRows = useCSVHeaders ? rows : [headers, ...rows];
-
-          const newList: DataList = {
-            id: Date.now().toString(),
-            name: csvNewListName || 'Imported List',
-            cols: finalHeaders.length,
-            rows: finalRows.length,
-            headers: finalHeaders,
-            data: finalRows.map(row => {
-              const rowData = [...row];
-              while (rowData.length < finalHeaders.length) rowData.push('');
-              return rowData.slice(0, finalHeaders.length);
-            }),
-            created: new Date().toISOString(),
-            lastEdited: new Date().toISOString(),
-          };
-
-          setData(prev => {
-            if (!prev || !currentPillar) return prev;
-            const lists = [...prev.data[currentPillar].lists, newList];
-            return {
-              ...prev,
-              data: {
-                ...prev.data,
-                [currentPillar]: { lists },
-              },
-            };
-          });
-          toast.success(`List "${newList.name}" created from CSV`);
-        } else if (csvUploadMode === 'existing' && selectedListForUpload !== null) {
-          // Upload to existing list
-          setData(prev => {
-            if (!prev || !currentPillar) return prev;
-            const lists = [...prev.data[currentPillar].lists];
-            const list = lists[selectedListForUpload];
-            
-            // Pad or trim rows to match list dimensions
-            const newData = rows.map(row => {
-              const rowData = [...row];
-              while (rowData.length < list.cols) rowData.push('');
-              return rowData.slice(0, list.cols);
-            });
-
-            list.data = newData;
-            list.rows = newData.length;
-            list.lastEdited = new Date().toISOString();
-
-            return {
-              ...prev,
-              data: {
-                ...prev.data,
-                [currentPillar]: { lists },
-              },
-            };
-          });
-          toast.success('Data uploaded to existing list');
-        }
-
-        setShowCSVModal(false);
-        setCSVFile(null);
-        setCSVNewListName('');
-        setSelectedListForUpload(null);
-      } catch (error) {
-        toast.error('Error parsing CSV file');
-      }
-    };
-    reader.readAsText(file);
   };
 
   const totalLists = Object.values(data.data).reduce((acc, sheet) => acc + sheet.lists.length, 0);
@@ -459,6 +400,7 @@ export default function Dashboard() {
           totalPillars={data.pillars.length}
           totalLists={totalLists}
           totalRows={totalRows}
+          dashboardData={data}
         />
       )}
 
@@ -479,401 +421,139 @@ export default function Dashboard() {
               {pillar && `${pillar.icon} ${pillar.name}`}
             </span>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAddListModal(true)}
-              className="gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              New List
+          <div className="flex gap-2 items-center">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                data-search-input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search (Ctrl+F)..."
+                className="h-8 w-48 pl-8 pr-8 text-sm"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setShowAddListModal(true)} className="gap-2">
+              <Plus className="w-4 h-4" /> New List
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCSVModal(true)}
-              className="gap-2"
-              title="Upload single CSV file"
-            >
-              <Upload className="w-4 h-4" />
-              Import CSV
+            <Button variant="outline" size="sm" onClick={() => setShowCSVModal(true)} className="gap-2" title="Upload single CSV file">
+              <Upload className="w-4 h-4" /> Import CSV
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowBulkCSVModal(true)}
-              className="gap-2"
-              title="Upload multiple CSV files at once"
-            >
-              <Upload className="w-4 h-4" />
-              Bulk Import
+            <Button variant="outline" size="sm" onClick={() => setShowBulkCSVModal(true)} className="gap-2" title="Upload multiple CSV files at once">
+              <Upload className="w-4 h-4" /> Bulk Import
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="gap-2"
-              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-            >
+            <div className="flex gap-1 border-l border-border pl-2 ml-1">
+              <Button variant="ghost" size="sm" onClick={handleUndo} disabled={undoStack.current.length === 0} title="Undo (Ctrl+Z)">
+                <Undo2 className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleRedo} disabled={redoStack.current.length === 0} title="Redo (Ctrl+Y)">
+                <Redo2 className="w-4 h-4" />
+              </Button>
+            </div>
+            <Button variant="ghost" size="sm" onClick={toggleTheme} className="gap-2" title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
               {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetToDefaults}
-              className="gap-2"
-              title="Reset to default pillars and clear all data"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Reset
+            <Button variant="outline" size="sm" onClick={handleResetToDefaults} className="gap-2" title="Reset to default pillars and clear all data">
+              <RefreshCw className="w-4 h-4" /> Reset
             </Button>
           </div>
         </div>
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
-          {lists.length === 0 ? (
+          {allLists.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="pt-12 pb-12 text-center">
                 <p className="text-muted-foreground mb-4">No lists yet. Create your first list to get started.</p>
                 <Button onClick={() => setShowAddListModal(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create List
+                  <Plus className="w-4 h-4 mr-2" /> Create List
+                </Button>
+              </CardContent>
+            </Card>
+          ) : filteredIndices.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="pt-12 pb-12 text-center">
+                <p className="text-muted-foreground mb-4">No lists match "{searchQuery}"</p>
+                <Button variant="outline" onClick={() => setSearchQuery('')}>
+                  Clear Search
                 </Button>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-6">
-              {lists.map((list, idx) => (
-                <Card key={list.id}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{list.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {list.cols} columns × {list.rows} rows • Updated {formatDate(list.lastEdited)}
-                        </p>
+              {filteredIndices.map(idx => {
+                const list = lists[idx];
+                return (
+                  <Card key={list.id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{list.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {list.cols} columns x {list.rows} rows - Updated {formatDate(list.lastEdited)}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleExportCSV(idx)} className="gap-2">
+                            <Download className="w-4 h-4" /> CSV
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => { setEditingListIndex(idx); setShowEditListModal(true); }} className="gap-2">
+                            <Settings className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteList(idx)} className="gap-2 text-destructive hover:text-destructive">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleExportCSV(idx)}
-                          className="gap-2"
-                        >
-                          <Download className="w-4 h-4" />
-                          CSV
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingListIndex(idx);
-                            setEditListName(list.name);
-                            setShowEditListModal(true);
-                          }}
-                          className="gap-2"
-                        >
-                          <Settings className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteList(idx)}
-                          className="gap-2 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <ListTable
-                      list={list}
-                      listIndex={idx}
-                      onUpdateCell={handleUpdateCell}
-                      onUpdateHeader={handleUpdateHeader}
-                      onAddRow={() => handleAddRow(idx)}
-                    />
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardContent>
+                      <ListTable
+                        list={list}
+                        listIndex={idx}
+                        onUpdateCell={handleUpdateCell}
+                        onUpdateHeader={handleUpdateHeader}
+                        onAddRow={() => handleAddRow(idx)}
+                        searchQuery={searchQuery}
+                      />
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
 
-      {/* Add List Modal */}
-      <Dialog open={showAddListModal} onOpenChange={setShowAddListModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New List</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">List Name</label>
-              <Input
-                value={listName}
-                onChange={(e) => setListName(e.target.value)}
-                placeholder="e.g., Q1 Objectives"
-                className="mt-1"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Columns</label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setColCount(Math.max(1, colCount - 1))}
-                  >
-                    −
-                  </Button>
-                  <Input
-                    type="number"
-                    value={colCount}
-                    onChange={(e) => setColCount(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
-                    className="text-center"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setColCount(Math.min(20, colCount + 1))}
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Rows</label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setRowCount(Math.max(1, rowCount - 1))}
-                  >
-                    −
-                  </Button>
-                  <Input
-                    type="number"
-                    value={rowCount}
-                    onChange={(e) => setRowCount(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
-                    className="text-center"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setRowCount(Math.min(100, rowCount + 1))}
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Column Headers (comma-separated, optional)</label>
-              <Input
-                value={colHeaders}
-                onChange={(e) => setColHeaders(e.target.value)}
-                placeholder="e.g., Task, Owner, Status"
-                className="mt-1"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddListModal(false)}>Cancel</Button>
-            <Button onClick={handleAddList}>Create List</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddListModal
+        open={showAddListModal}
+        onOpenChange={setShowAddListModal}
+        onAdd={handleAddList}
+      />
 
-      {/* Edit List Modal */}
-      <Dialog open={showEditListModal} onOpenChange={setShowEditListModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit List</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">List Name</label>
-              <Input
-                value={editListName}
-                onChange={(e) => setEditListName(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Add Columns</label>
-                <Input
-                  type="number"
-                  value={addCols}
-                  onChange={(e) => setAddCols(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Add Rows</label>
-                <Input
-                  type="number"
-                  value={addRows}
-                  onChange={(e) => setAddRows(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditListModal(false)}>Cancel</Button>
-            <Button onClick={handleEditList}>Update</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditListModal
+        open={showEditListModal}
+        onOpenChange={setShowEditListModal}
+        listName={editingListIndex !== null && lists[editingListIndex] ? lists[editingListIndex].name : ''}
+        onEdit={handleEditList}
+      />
 
-      {/* CSV Upload Modal */}
-      <Dialog open={showCSVModal} onOpenChange={setShowCSVModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Import CSV Data</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Upload Mode</label>
-              <div className="flex gap-2 mt-2">
-                <Button
-                  variant={csvUploadMode === 'new' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCSVUploadMode('new')}
-                  className="flex-1"
-                >
-                  New List
-                </Button>
-                <Button
-                  variant={csvUploadMode === 'existing' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCSVUploadMode('existing')}
-                  className="flex-1"
-                >
-                  Existing List
-                </Button>
-              </div>
-            </div>
+      <CSVImportModal
+        open={showCSVModal}
+        onOpenChange={setShowCSVModal}
+        lists={lists}
+        onImportNew={handleCSVImportNew}
+        onImportExisting={handleCSVImportExisting}
+      />
 
-            {csvUploadMode === 'new' && (
-              <>
-                <div>
-                  <label className="text-sm font-medium">List Name</label>
-                  <Input
-                    value={csvNewListName}
-                    onChange={(e) => setCSVNewListName(e.target.value)}
-                    placeholder="e.g., Imported Data"
-                    className="mt-1"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="useHeaders"
-                    checked={useCSVHeaders}
-                    onChange={(e) => setUseCSVHeaders(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <label htmlFor="useHeaders" className="text-sm">Use first row as headers</label>
-                </div>
-              </>
-            )}
-
-            {csvUploadMode === 'existing' && (
-              <div>
-                <label className="text-sm font-medium">Select List</label>
-                <select
-                  value={selectedListForUpload ?? ''}
-                  onChange={(e) => setSelectedListForUpload(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full mt-1 px-3 py-2 border border-border rounded-md text-sm"
-                >
-                  <option value="">Choose a list...</option>
-                  {lists.map((list, idx) => (
-                    <option key={idx} value={idx}>
-                      {list.name} ({list.cols} cols x {list.rows} rows)
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div>
-              <label className="text-sm font-medium">CSV File</label>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={(e) => setCSVFile(e.target.files?.[0] || null)}
-                className="w-full mt-1 px-3 py-2 border border-border rounded-md text-sm"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCSVModal(false)}>Cancel</Button>
-            <Button
-              onClick={() => csvFile && handleCSVUpload(csvFile)}
-              disabled={!csvFile || (csvUploadMode === 'existing' && selectedListForUpload === null)}
-            >
-              Import
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Bulk CSV Import Modal */}
-      <Dialog open={showBulkCSVModal} onOpenChange={setShowBulkCSVModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Bulk Import CSV Files</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Upload multiple CSV files at once. Each file will be imported as a separate list in the current pillar.
-            </p>
-            <div>
-              <label className="text-sm font-medium">CSV Files</label>
-              <input
-                type="file"
-                accept=".csv"
-                multiple
-                onChange={(e) => setBulkCSVFiles(Array.from(e.target.files || []))}
-                className="w-full mt-1 px-3 py-2 border border-border rounded-md text-sm"
-              />
-              {bulkCSVFiles.length > 0 && (
-                <div className="mt-2 text-xs text-muted-foreground">
-                  {bulkCSVFiles.length} file(s) selected
-                </div>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBulkCSVModal(false)}>Cancel</Button>
-            <Button
-              onClick={() => bulkCSVFiles.length > 0 && handleBulkCSVUpload(bulkCSVFiles)}
-              disabled={bulkCSVFiles.length === 0}
-            >
-              Import {bulkCSVFiles.length > 0 ? `(${bulkCSVFiles.length})` : ''}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <BulkCSVImportModal
+        open={showBulkCSVModal}
+        onOpenChange={setShowBulkCSVModal}
+        onImport={handleBulkCSVUpload}
+      />
     </div>
   );
-}
-
-function formatDate(isoString: string): string {
-  if (!isoString) return 'Never';
-  const date = new Date(isoString);
-  const now = new Date();
-  const diff = (now.getTime() - date.getTime()) / 1000;
-
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return date.toLocaleDateString();
 }
