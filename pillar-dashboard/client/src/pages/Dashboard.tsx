@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Download, Settings, RefreshCw, ChevronLeft, Upload, Moon, Sun, Search, X, Undo2, Redo2, Briefcase } from 'lucide-react';
+import { Plus, Trash2, Download, Settings, RefreshCw, ChevronLeft, Upload, Moon, Sun, Search, X, Undo2, Redo2, Briefcase, Menu, Monitor, Smartphone, MoreVertical } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import ListTable from '@/components/ListTable';
 import AddListModal from '@/components/AddListModal';
@@ -17,6 +17,15 @@ import { DashboardData, List as DataList, ChannelMessage, ChannelInfo } from '@/
 import { DEFAULT_PILLARS, saveData, loadData, getStorageUsage } from '@/lib/storage';
 import { parseCSV, exportToCSV, downloadCSV } from '@/lib/csv';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLayout } from '@/contexts/LayoutContext';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const CHANNELS: ChannelInfo[] = [
   { number: 'I', name: 'Noticeboard (ABCD)', description: 'Exec-facing broadcast layer, the published truth with links out.' },
@@ -56,9 +65,12 @@ function formatDate(isoString: string): string {
 
 export default function Dashboard() {
   const { theme, toggleTheme } = useTheme();
+  const { layout, toggleLayout } = useLayout();
+  const isMobile = layout === 'mobile';
   const [data, setData] = useState<DashboardData | null>(null);
   const [currentPillar, setCurrentPillar] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState<'pillars' | 'tom' | 'corporate'>('pillars');
 
   // Modal state
@@ -446,165 +458,296 @@ export default function Dashboard() {
     return acc + sheet.lists.reduce((rowAcc, list) => rowAcc + (list.data ? list.data.length : 0), 0);
   }, 0);
 
+  // Shared sidebar props (used in both desktop and mobile)
+  const sidebarProps = {
+    pillars: data.pillars,
+    currentPillar,
+    onSelectPillar: isMobile
+      ? (id: string) => { setCurrentPillar(id); setMobileSidebarOpen(false); }
+      : setCurrentPillar,
+    totalPillars: data.pillars.length,
+    totalLists,
+    totalRows,
+    dashboardData: data,
+    activeView,
+    onSelectView: isMobile
+      ? ((view: 'pillars' | 'tom' | 'corporate') => { setActiveView(view); setMobileSidebarOpen(false); }) as (view: 'pillars' | 'tom' | 'corporate') => void
+      : setActiveView,
+    openChannelNumber,
+    onOpenChannel: isMobile
+      ? (channelNumber: string) => { handleOpenChannel(channelNumber); setMobileSidebarOpen(false); }
+      : handleOpenChannel,
+  };
+
+  // Content area (shared between desktop and mobile)
+  const contentArea = (
+    <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'p-6'}`}>
+      {activeView === 'corporate' ? (
+        <CorporateMode />
+      ) : activeView === 'tom' ? (
+        <TOMSection onOpenChannel={handleOpenChannel} />
+      ) : allLists.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="pt-12 pb-12 text-center">
+            <p className="text-muted-foreground mb-4">No lists yet. Create your first list to get started.</p>
+            <Button onClick={() => setShowAddListModal(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Create List
+            </Button>
+          </CardContent>
+        </Card>
+      ) : filteredIndices.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="pt-12 pb-12 text-center">
+            <p className="text-muted-foreground mb-4">No lists match "{searchQuery}"</p>
+            <Button variant="outline" onClick={() => setSearchQuery('')}>
+              Clear Search
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
+          {filteredIndices.map(idx => {
+            const list = lists[idx];
+            return (
+              <Card key={list.id}>
+                <CardHeader className={isMobile ? 'pb-2 px-3 pt-3' : 'pb-3'}>
+                  <div className={isMobile ? 'space-y-2' : 'flex items-center justify-between'}>
+                    <div className={isMobile ? '' : undefined}>
+                      <CardTitle className={isMobile ? 'text-base' : 'text-lg'}>{list.name}</CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {list.cols} columns x {list.rows} rows - Updated {formatDate(list.lastEdited)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleExportCSV(idx)} className="gap-2">
+                        <Download className="w-4 h-4" />{!isMobile && ' CSV'}
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => { setEditingListIndex(idx); setShowEditListModal(true); }} className="gap-2">
+                        <Settings className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteList(idx)} className="gap-2 text-destructive hover:text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className={isMobile ? 'px-3 pb-3' : undefined}>
+                  <ListTable
+                    list={list}
+                    listIndex={idx}
+                    onUpdateCell={handleUpdateCell}
+                    onUpdateHeader={handleUpdateHeader}
+                    onAddRow={() => handleAddRow(idx)}
+                    searchQuery={searchQuery}
+                  />
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  // Layout toggle button (shared)
+  const layoutToggleButton = (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={toggleLayout}
+      className="gap-2"
+      title={isMobile ? 'Switch to Desktop layout' : 'Switch to Mobile layout'}
+    >
+      {isMobile ? <Monitor className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
+    </Button>
+  );
+
   return (
     <div className="flex h-screen bg-background">
-      {sidebarOpen && (
-        <Sidebar
-          pillars={data.pillars}
-          currentPillar={currentPillar}
-          onSelectPillar={setCurrentPillar}
-          totalPillars={data.pillars.length}
-          totalLists={totalLists}
-          totalRows={totalRows}
-          dashboardData={data}
-          activeView={activeView}
-          onSelectView={setActiveView}
-          openChannelNumber={openChannelNumber}
-          onOpenChannel={handleOpenChannel}
-        />
+      {/* ===== DESKTOP LAYOUT (unchanged) ===== */}
+      {!isMobile && (
+        <>
+          {sidebarOpen && <Sidebar {...sidebarProps} />}
+
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Command Bar */}
+            <div className="h-12 bg-card border-b border-border flex items-center justify-between px-6 flex-shrink-0">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="gap-2"
+                  title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+                >
+                  <ChevronLeft className={`w-4 h-4 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {activeView === 'tom'
+                    ? '🏗️ Target Operating Model'
+                    : activeView === 'corporate'
+                    ? '🏢 Corporate Mode'
+                    : pillar && `${pillar.icon} ${pillar.name}`}
+                </span>
+              </div>
+              <div className="flex gap-2 items-center">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    data-search-input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search (Ctrl+F)..."
+                    className="h-8 w-48 pl-8 pr-8 text-sm"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowAddListModal(true)} className="gap-2">
+                  <Plus className="w-4 h-4" /> New List
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowCSVModal(true)} className="gap-2" title="Upload single CSV file">
+                  <Upload className="w-4 h-4" /> Import CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowBulkCSVModal(true)} className="gap-2" title="Upload multiple CSV files at once">
+                  <Upload className="w-4 h-4" /> Bulk Import
+                </Button>
+                <div className="flex gap-1 border-l border-border pl-2 ml-1">
+                  <Button variant="ghost" size="sm" onClick={handleUndo} disabled={undoStack.current.length === 0} title="Undo (Ctrl+Z)">
+                    <Undo2 className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleRedo} disabled={redoStack.current.length === 0} title="Redo (Ctrl+Y)">
+                    <Redo2 className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Button
+                  variant={activeView === 'corporate' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setActiveView(activeView === 'corporate' ? 'pillars' : 'corporate')}
+                  className="gap-2"
+                  title={activeView === 'corporate' ? 'Exit Corporate Mode' : 'Switch to Corporate Mode'}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  {activeView === 'corporate' ? 'Exit Corporate' : 'Corporate'}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={toggleTheme} className="gap-2" title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+                  {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                </Button>
+                {layoutToggleButton}
+                <Button variant="outline" size="sm" onClick={handleResetToDefaults} className="gap-2" title="Reset to default pillars and clear all data">
+                  <RefreshCw className="w-4 h-4" /> Reset
+                </Button>
+              </div>
+            </div>
+
+            {/* Content Area */}
+            {contentArea}
+          </div>
+        </>
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Command Bar */}
-        <div className="h-12 bg-card border-b border-border flex items-center justify-between px-6 flex-shrink-0">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="gap-2"
-              title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-            >
-              <ChevronLeft className={`w-4 h-4 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              {activeView === 'tom'
-                ? '🏗️ Target Operating Model'
-                : activeView === 'corporate'
-                ? '🏢 Corporate Mode'
-                : pillar && `${pillar.icon} ${pillar.name}`}
-            </span>
-          </div>
-          <div className="flex gap-2 items-center">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                data-search-input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search (Ctrl+F)..."
-                className="h-8 w-48 pl-8 pr-8 text-sm"
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setShowAddListModal(true)} className="gap-2">
-              <Plus className="w-4 h-4" /> New List
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowCSVModal(true)} className="gap-2" title="Upload single CSV file">
-              <Upload className="w-4 h-4" /> Import CSV
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowBulkCSVModal(true)} className="gap-2" title="Upload multiple CSV files at once">
-              <Upload className="w-4 h-4" /> Bulk Import
-            </Button>
-            <div className="flex gap-1 border-l border-border pl-2 ml-1">
-              <Button variant="ghost" size="sm" onClick={handleUndo} disabled={undoStack.current.length === 0} title="Undo (Ctrl+Z)">
-                <Undo2 className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleRedo} disabled={redoStack.current.length === 0} title="Redo (Ctrl+Y)">
-                <Redo2 className="w-4 h-4" />
-              </Button>
-            </div>
-            <Button
-              variant={activeView === 'corporate' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setActiveView(activeView === 'corporate' ? 'pillars' : 'corporate')}
-              className="gap-2"
-              title={activeView === 'corporate' ? 'Exit Corporate Mode' : 'Switch to Corporate Mode'}
-            >
-              <Briefcase className="w-4 h-4" />
-              {activeView === 'corporate' ? 'Exit Corporate' : 'Corporate'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={toggleTheme} className="gap-2" title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleResetToDefaults} className="gap-2" title="Reset to default pillars and clear all data">
-              <RefreshCw className="w-4 h-4" /> Reset
-            </Button>
-          </div>
-        </div>
+      {/* ===== MOBILE LAYOUT ===== */}
+      {isMobile && (
+        <>
+          {/* Mobile sidebar as a Sheet overlay */}
+          <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+            <SheetContent side="left" className="w-72 p-0 [&>button:last-child]:hidden">
+              <SheetTitle className="sr-only">Navigation</SheetTitle>
+              <Sidebar {...sidebarProps} />
+            </SheetContent>
+          </Sheet>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {activeView === 'corporate' ? (
-            <CorporateMode />
-          ) : activeView === 'tom' ? (
-            <TOMSection onOpenChannel={handleOpenChannel} />
-          ) : allLists.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="pt-12 pb-12 text-center">
-                <p className="text-muted-foreground mb-4">No lists yet. Create your first list to get started.</p>
-                <Button onClick={() => setShowAddListModal(true)}>
-                  <Plus className="w-4 h-4 mr-2" /> Create List
-                </Button>
-              </CardContent>
-            </Card>
-          ) : filteredIndices.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="pt-12 pb-12 text-center">
-                <p className="text-muted-foreground mb-4">No lists match "{searchQuery}"</p>
-                <Button variant="outline" onClick={() => setSearchQuery('')}>
-                  Clear Search
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-6">
-              {filteredIndices.map(idx => {
-                const list = lists[idx];
-                return (
-                  <Card key={list.id}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{list.name}</CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {list.cols} columns x {list.rows} rows - Updated {formatDate(list.lastEdited)}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleExportCSV(idx)} className="gap-2">
-                            <Download className="w-4 h-4" /> CSV
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => { setEditingListIndex(idx); setShowEditListModal(true); }} className="gap-2">
-                            <Settings className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDeleteList(idx)} className="gap-2 text-destructive hover:text-destructive">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <ListTable
-                        list={list}
-                        listIndex={idx}
-                        onUpdateCell={handleUpdateCell}
-                        onUpdateHeader={handleUpdateHeader}
-                        onAddRow={() => handleAddRow(idx)}
-                        searchQuery={searchQuery}
-                      />
-                    </CardContent>
-                  </Card>
-                );
-              })}
+          <div className="flex-1 flex flex-col overflow-hidden w-full">
+            {/* Mobile Command Bar */}
+            <div className="bg-card border-b border-border flex-shrink-0">
+              {/* Top row: hamburger, title, key toggles */}
+              <div className="h-12 flex items-center justify-between px-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setMobileSidebarOpen(true)}
+                    title="Open navigation"
+                  >
+                    <Menu className="w-5 h-5" />
+                  </Button>
+                  <span className="text-sm font-medium text-foreground truncate max-w-[180px]">
+                    {activeView === 'tom'
+                      ? '🏗️ TOM'
+                      : activeView === 'corporate'
+                      ? '🏢 Corporate'
+                      : pillar && `${pillar.icon} ${pillar.name}`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" onClick={handleUndo} disabled={undoStack.current.length === 0} title="Undo">
+                    <Undo2 className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleRedo} disabled={redoStack.current.length === 0} title="Redo">
+                    <Redo2 className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={toggleTheme} title={`${theme === 'light' ? 'Dark' : 'Light'} mode`}>
+                    {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                  </Button>
+                  {layoutToggleButton}
+                  {/* Overflow menu for less-used actions */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" title="More actions">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setShowAddListModal(true)}>
+                        <Plus className="w-4 h-4 mr-2" /> New List
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowCSVModal(true)}>
+                        <Upload className="w-4 h-4 mr-2" /> Import CSV
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowBulkCSVModal(true)}>
+                        <Upload className="w-4 h-4 mr-2" /> Bulk Import
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setActiveView(activeView === 'corporate' ? 'pillars' : 'corporate')}>
+                        <Briefcase className="w-4 h-4 mr-2" />
+                        {activeView === 'corporate' ? 'Exit Corporate' : 'Corporate Mode'}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleResetToDefaults} className="text-destructive">
+                        <RefreshCw className="w-4 h-4 mr-2" /> Reset
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+              {/* Search row */}
+              <div className="px-3 pb-2">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    data-search-input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search..."
+                    className="h-9 w-full pl-8 pr-8 text-sm"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      </div>
+
+            {/* Content Area */}
+            {contentArea}
+          </div>
+        </>
+      )}
 
       {/* Channel Chat Panel */}
       {openChannel && (
