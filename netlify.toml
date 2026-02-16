@@ -1,7 +1,10 @@
 [build]
   base = "pillar-dashboard"
-  command = "pnpm install && pnpm build"
+  command = "corepack enable && pnpm install && pnpm build"
   publish = "dist/public"
+
+[build.environment]
+  NODE_VERSION = "20"
 
 [[redirects]]
   from = "/*"
