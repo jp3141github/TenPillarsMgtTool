@@ -549,19 +549,6 @@ export default function Dashboard() {
     </div>
   );
 
-  // Layout toggle button (shared)
-  const layoutToggleButton = (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={toggleLayout}
-      className="gap-2"
-      title={isMobile ? 'Switch to Desktop layout' : 'Switch to Mobile layout'}
-    >
-      {isMobile ? <Monitor className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
-    </Button>
-  );
-
   return (
     <div className="flex h-screen bg-background">
       {/* ===== DESKTOP LAYOUT (unchanged) ===== */}
@@ -636,7 +623,6 @@ export default function Dashboard() {
                 <Button variant="ghost" size="sm" onClick={toggleTheme} className="gap-2" title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
                   {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                 </Button>
-                {layoutToggleButton}
                 <Button variant="outline" size="sm" onClick={handleResetToDefaults} className="gap-2" title="Reset to default pillars and clear all data">
                   <RefreshCw className="w-4 h-4" /> Reset
                 </Button>
@@ -692,7 +678,6 @@ export default function Dashboard() {
                   <Button variant="ghost" size="sm" onClick={toggleTheme} title={`${theme === 'light' ? 'Dark' : 'Light'} mode`}>
                     {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                   </Button>
-                  {layoutToggleButton}
                   {/* Overflow menu for less-used actions */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -748,6 +733,20 @@ export default function Dashboard() {
           </div>
         </>
       )}
+
+      {/* Fixed bottom-left layout toggle */}
+      <div className="fixed bottom-4 left-4 z-50">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleLayout}
+          className="gap-2 shadow-md bg-card hover:bg-accent"
+          title={isMobile ? 'Switch to Desktop layout' : 'Switch to Mobile layout'}
+        >
+          {isMobile ? <Monitor className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
+          <span className="text-xs">{isMobile ? 'Desktop' : 'Mobile'}</span>
+        </Button>
+      </div>
 
       {/* Channel Chat Panel */}
       {openChannel && (
