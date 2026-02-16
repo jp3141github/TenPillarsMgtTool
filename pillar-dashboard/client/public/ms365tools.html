@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOM Operating System | MS365 Architecture Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f3f2f1; }
+        
+        /* MS365 Brand Colors */
+        .ms-teams { background: #6264A7; }
+        .ms-sharepoint { background: #0078d4; }
+        .ms-lists { background: #106ebe; }
+        .ms-planner { background: #31752f; }
+        .ms-automate { background: #0066ff; }
+        .ms-powerbi { background: #f2c811; color: #333; }
+        .ms-loop { background: #8764b8; }
+        
+        .badge-teams { background: #e6e4f0; color: #6264A7; border: 1px solid #6264A7; }
+        .badge-sharepoint { background: #e6f2ff; color: #0078d4; border: 1px solid #0078d4; }
+        .badge-lists { background: #cce3f1; color: #106ebe; border: 1px solid #106ebe; }
+        .badge-planner { background: #d4edda; color: #155724; border: 1px solid #155724; }
+        .badge-automate { background: #cce0ff; color: #0066ff; border: 1px solid #0066ff; }
+        .badge-powerbi { background: #fff4ce; color: #797673; border: 1px solid #f2c811; }
+        
+        .sidebar-item:hover { background: rgba(255,255,255,0.1); }
+        .active-nav { background: rgba(255,255,255,0.2); border-left: 3px solid #fff; }
+        .card { background: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .ms-card { border-top: 4px solid; }
+        .register-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+        .kanban-col { min-height: 400px; background: #f3f2f1; border-radius: 4px; }
+        .draggable { cursor: move; }
+        .dragging { opacity: 0.5; }
+        
+        .tool-label { 
+            position: absolute; 
+            top: -12px; 
+            right: 10px; 
+            font-size: 0.7rem; 
+            padding: 2px 8px; 
+            border-radius: 12px; 
+            font-weight: 600;
+            z-index: 10;
+        }
+        
+        .migration-banner {
+            background: linear-gradient(90deg, #0078d4 0%, #6264A7 50%, #31752f 100%);
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .architecture-map {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            position: relative;
+        }
+        
+        .arch-layer { 
+            border: 2px dashed #ccc; 
+            border-radius: 8px; 
+            padding: 1rem; 
+            position: relative;
+            background: #fafafa;
+        }
+        
+        .arch-layer-title {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #fff;
+            padding: 0 10px;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .swimlane-arrow {
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 2rem;
+        }
+
+        /* ===== VIEW TOGGLE STYLES ===== */
+        .view-toggle {
+            display: flex;
+            align-items: center;
+            background: #e5e7eb;
+            border-radius: 9999px;
+            padding: 2px;
+            gap: 2px;
+        }
+        .view-toggle button {
+            padding: 4px 14px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+            color: #6b7280;
+        }
+        .view-toggle button.active {
+            background: white;
+            color: #1f2937;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        /* ===== FIXED BOTTOM-LEFT VIEW TOGGLE ===== */
+        .view-toggle-fixed {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            z-index: 60;
+        }
+
+        /* ===== MOBILE BOTTOM NAVIGATION BAR ===== */
+        .mobile-bottom-nav {
+            display: none;
+        }
+
+        body.mobile-mode .mobile-bottom-nav {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 55;
+            background: #1f2937;
+            border-top: 1px solid #374151;
+            padding: 4px 0;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .mobile-bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 6px 4px;
+            border: none;
+            background: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 0.6rem;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: all 0.2s;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .mobile-bottom-nav-item:hover {
+            color: #d1d5db;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .mobile-bottom-nav-item.active {
+            color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .mobile-bottom-nav-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Adjust bottom-left toggle when mobile bottom nav is visible */
+        body.mobile-mode .view-toggle-fixed {
+            bottom: 64px;
+        }
+
+        /* ===== HAMBURGER MENU BUTTON ===== */
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #374151;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* ===== SIDEBAR OVERLAY (for mobile) ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 45;
+        }
+
+        /* ===== MOBILE MODE STYLES ===== */
+        body.mobile-mode .sidebar-overlay.open {
+            display: block;
+        }
+
+        body.mobile-mode .hamburger-btn {
+            display: flex;
+        }
+
+        body.mobile-mode aside {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
+            width: 260px;
+            transition: left 0.3s ease;
+            margin-top: 0;
+        }
+
+        body.mobile-mode aside.sidebar-open {
+            left: 0;
+        }
+
+        body.mobile-mode .migration-banner {
+            font-size: 0.75rem;
+            padding: 6px 12px;
+            flex-direction: column;
+            gap: 4px;
+            text-align: center;
+        }
+
+        body.mobile-mode .migration-banner .flex {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        body.mobile-mode .migration-banner span:last-child {
+            font-size: 0.65rem;
+            line-height: 1.2;
+            opacity: 0.9;
+        }
+
+        body.mobile-mode main {
+            margin-top: 0;
+        }
+
+        body.mobile-mode .top-bar-title {
+            font-size: 1rem;
+        }
+
+        body.mobile-mode .ms-equiv-badge {
+            font-size: 0.6rem;
+            padding: 1px 6px;
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        body.mobile-mode .top-bar-actions .intake-btn-text {
+            font-size: 0.7rem;
+        }
+
+        body.mobile-mode .top-bar-actions .intake-btn-badge {
+            font-size: 0.55rem;
+            padding: 0 4px;
+        }
+
+        body.mobile-mode #content-area {
+            padding: 1rem;
+            padding-bottom: 70px;
+        }
+
+        /* Dashboard cards: 2-col on tablet, 1-col on narrow mobile */
+        body.mobile-mode .dashboard-metrics {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.75rem !important;
+        }
+
+        body.mobile-mode .dashboard-metrics .card {
+            padding: 0.75rem;
+        }
+
+        body.mobile-mode .dashboard-metrics .text-3xl {
+            font-size: 1.5rem;
+        }
+
+        body.mobile-mode .dashboard-bottom {
+            grid-template-columns: 1fr !important;
+        }
+
+        /* Register grid: single col on mobile */
+        body.mobile-mode .register-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        /* Architecture map: single col on mobile */
+        body.mobile-mode .architecture-map {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+        }
+
+        body.mobile-mode .migration-checklist-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem !important;
+        }
+
+        /* Planner: vertical stack on mobile */
+        body.mobile-mode .kanban-container {
+            flex-direction: column !important;
+            overflow-x: visible !important;
+        }
+
+        body.mobile-mode .kanban-container > div {
+            width: 100% !important;
+            flex-shrink: 1 !important;
+        }
+
+        body.mobile-mode .kanban-col {
+            min-height: 120px;
+        }
+
+        body.mobile-mode .planner-toolbar {
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+            align-items: flex-start !important;
+        }
+
+        body.mobile-mode .planner-toolbar .flex {
+            flex-wrap: wrap;
+        }
+
+        /* Performance: single col on mobile */
+        body.mobile-mode .performance-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        /* ICP detail: scrollable table */
+        body.mobile-mode .icp-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        body.mobile-mode .icp-views-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        /* Automation flows */
+        body.mobile-mode .automation-actions {
+            flex-direction: column;
+        }
+
+        body.mobile-mode .automation-test-btns {
+            flex-wrap: wrap;
+        }
+
+        /* Modal: full-width on mobile */
+        body.mobile-mode #intake-modal > div {
+            width: 95% !important;
+            max-width: none !important;
+            margin: 1rem;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        body.mobile-mode .modal-form-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        /* Banner compact on mobile */
+        body.mobile-mode .migration-banner button {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+        }
+
+        /* Swimlane arrows hidden on mobile */
+        body.mobile-mode .swimlane-arrow {
+            display: none;
+        }
+
+        /* Sidebar close button visible in mobile */
+        body.mobile-mode .sidebar-close-btn {
+            display: block !important;
+        }
+
+        /* Sidebar padding top in mobile (no banner offset) */
+        body.mobile-mode aside {
+            padding-top: 0;
+        }
+
+        /* Header adjustments in mobile */
+        body.mobile-mode header {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        /* Smaller toggle on mobile */
+        body.mobile-mode .view-toggle button {
+            padding: 3px 10px;
+            font-size: 0.7rem;
+        }
+
+        /* Tool labels reposition on mobile - handled by clickable pill styles below */
+
+        /* Back button: hidden in desktop, visible in mobile */
+        .mobile-back-btn {
+            display: none;
+        }
+
+        body.mobile-mode .mobile-back-btn {
+            display: inline-flex;
+        }
+
+        /* Clickable tool-label pills in mobile — navigate to related view */
+        body.mobile-mode .tool-label {
+            position: static;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        body.mobile-mode .tool-label:active {
+            opacity: 0.6;
+        }
+
+        /* Fix body scroll in mobile mode */
+        body.mobile-mode {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- Migration Notice Banner -->
+    <div class="fixed top-0 left-0 right-0 z-50 migration-banner">
+        <div class="flex items-center gap-2">
+            <span class="font-bold">🚀 PROTOTYPE MODE:</span>
+            <span>Simulating MS365 stack | Teams → SharePoint → Lists → Planner → Power Automate → Power BI</span>
+        </div>
+        <button onclick="switchView('architecture')" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded text-sm">
+            View Architecture Map
+        </button>
+    </div>
+
+    <!-- Left Navigation (Simulates: Teams App Navigation + SharePoint Hub) -->
+    <aside id="app-sidebar" class="w-64 bg-gray-900 text-white flex flex-col mt-10">
+        <div class="p-4 border-b border-gray-700 flex items-center gap-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center font-bold">T</div>
+            <div class="flex-1">
+                <h1 class="font-semibold text-sm">TOM Operating System</h1>
+                <p class="text-xs text-gray-400">MS365 Architecture Preview</p>
+            </div>
+            <button onclick="closeSidebar()" class="sidebar-close-btn text-gray-400 hover:text-white" style="display:none;">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4">
+            <div class="px-4 mb-2 text-xs text-gray-400 uppercase tracking-wider flex justify-between items-center">
+                <span>Navigation</span>
+                <span class="text-[10px] bg-gray-700 px-1 rounded">Teams Channel</span>
+            </div>
+            
+            <a href="#" onclick="switchView('dashboard')" id="nav-dashboard" class="sidebar-item active-nav px-4 py-3 flex items-center gap-3 text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Command Center
+                <span class="ml-auto text-[10px] bg-blue-900 px-1 rounded">Teams</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2 text-xs text-gray-400 uppercase tracking-wider flex justify-between items-center">
+                <span>Data Layer</span>
+                <span class="text-[10px] bg-blue-800 px-1 rounded">SharePoint Lists</span>
+            </div>
+            
+            <a href="#" onclick="switchView('registers')" id="nav-registers" class="sidebar-item px-4 py-3 flex items-center gap-3 text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                Structured Registers
+                <span class="ml-auto text-[10px] bg-blue-900 px-1 rounded">Lists</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2 text-xs text-gray-400 uppercase tracking-wider flex justify-between items-center">
+                <span>Execution</span>
+                <span class="text-[10px] bg-green-900 px-1 rounded">Planner</span>
+            </div>
+            
+            <a href="#" onclick="switchView('planner')" id="nav-planner" class="sidebar-item px-4 py-3 flex items-center gap-3 text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                Close Plan & Delivery
+                <span class="ml-auto text-[10px] bg-green-900 px-1 rounded">Planner</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2 text-xs text-gray-400 uppercase tracking-wider flex justify-between items-center">
+                <span>Control Plane</span>
+                <span class="text-[10px] bg-blue-900 px-1 rounded">Power</span>
+            </div>
+            
+            <a href="#" onclick="switchView('automations')" id="nav-automations" class="sidebar-item px-4 py-3 flex items-center gap-3 text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                Automations
+                <span class="ml-auto text-[10px] bg-blue-900 px-1 rounded">Automate</span>
+            </a>
+            
+            <a href="#" onclick="switchView('performance')" id="nav-performance" class="sidebar-item px-4 py-3 flex items-center gap-3 text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Performance Radar
+                <span class="ml-auto text-[10px] bg-yellow-600 text-black px-1 rounded">BI</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2 text-xs text-gray-400 uppercase tracking-wider">
+                <span>System Design</span>
+            </div>
+            <a href="#" onclick="switchView('architecture')" id="nav-architecture" class="sidebar-item px-4 py-3 flex items-center gap-3 text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Architecture Map
+                <span class="ml-auto text-[10px] bg-purple-900 px-1 rounded">Spec</span>
+            </a>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-700 text-xs text-gray-400">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                <span>Prototype Active</span>
+            </div>
+            <div>Ready for MS365 migration</div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col overflow-hidden mt-10">
+        <!-- Top Bar -->
+        <header class="bg-white border-b px-6 py-3 flex justify-between items-center shadow-sm">
+            <div class="flex items-center gap-4">
+                <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <h2 id="page-title" class="text-xl font-semibold text-gray-800 top-bar-title">Command Center</h2>
+                <span id="ms-equivalent" class="ms-equiv-badge px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full border border-purple-300">
+                    Replaces: Microsoft Teams (Hub) + SharePoint (Home Site)
+                </span>
+            </div>
+            <div class="flex items-center gap-4 top-bar-actions">
+                <button onclick="openIntakeModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span class="intake-btn-text">New ICP Intake</span>
+                    <span class="intake-btn-badge text-[10px] bg-blue-800 px-1 rounded ml-1">→ List item</span>
+                </button>
+                <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm font-semibold">TM</div>
+            </div>
+        </header>
+
+        <!-- Content Views -->
+        <div id="content-area" class="flex-1 overflow-y-auto p-6">
+            
+            <!-- ARCHITECTURE MAP VIEW -->
+            <div id="view-architecture" class="view-section hidden">
+                <div class="mb-6">
+                    <button onclick="switchView('dashboard')" class="mobile-back-btn mb-3 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        Back to Dashboard
+                    </button>
+                    <h2 class="text-2xl font-bold mb-2">MS365 Architecture Mapping</h2>
+                    <p class="text-gray-600">This prototype maps 1:1 to the following Microsoft 365 implementation pattern</p>
+                </div>
+
+                <div class="architecture-map mb-8">
+                    <!-- Front Door Layer -->
+                    <div class="arch-layer border-blue-500">
+                        <div class="arch-layer-title text-blue-600">Front Door</div>
+                        <div class="space-y-3">
+                            <div class="bg-blue-50 p-3 rounded border border-blue-200">
+                                <div class="font-bold text-blue-800">Microsoft Teams</div>
+                                <div class="text-sm text-blue-600">TOM Hub Team</div>
+                                <ul class="text-xs mt-2 space-y-1 text-gray-600">
+                                    <li>• Channels per pillar/workstream</li>
+                                    <li>• Tabs: Lists, Planner, Power BI</li>
+                                    <li>• Meeting integration (RCC)</li>
+                                </ul>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded border border-blue-200">
+                                <div class="font-bold text-blue-800">SharePoint</div>
+                                <div class="text-sm text-blue-600">Home Site / Hub</div>
+                                <ul class="text-xs mt-2 space-y-1 text-gray-600">
+                                    <li>• Controlled document repository</li>
+                                    <li>• Lists web parts (ICP, ORM, etc.)</li>
+                                    <li>• Navigation and search</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Layer -->
+                    <div class="arch-layer border-teal-500">
+                        <div class="arch-layer-title text-teal-600">System of Record</div>
+                        <div class="space-y-2">
+                            <div class="bg-teal-50 p-3 rounded border border-teal-200">
+                                <div class="font-bold text-teal-800">Microsoft Lists</div>
+                                <div class="text-xs text-gray-600 mt-1">Structured Registers:</div>
+                                <div class="grid grid-cols-2 gap-1 mt-1 text-xs">
+                                    <div class="bg-white p-1 rounded border">ICP Intake</div>
+                                    <div class="bg-white p-1 rounded border">SDP Portfolio</div>
+                                    <div class="bg-white p-1 rounded border">ORM Risks</div>
+                                    <div class="bg-white p-1 rounded border">QACE Controls</div>
+                                    <div class="bg-white p-1 rounded border">RACI Matrix</div>
+                                    <div class="bg-white p-1 rounded border">RCC Actions</div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded border border-gray-300">
+                                <div class="font-bold text-gray-800">SharePoint Document Lib</div>
+                                <div class="text-xs text-gray-600">Operational Playbook, Evidence Packs, Standards</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Execution Layer -->
+                    <div class="arch-layer border-green-500">
+                        <div class="arch-layer-title text-green-600">Execution Engine</div>
+                        <div class="space-y-3">
+                            <div class="bg-green-50 p-3 rounded border border-green-200">
+                                <div class="font-bold text-green-800">Planner (New)</div>
+                                <div class="text-sm text-green-600">Close Plan & Delivery</div>
+                                <ul class="text-xs mt-2 space-y-1 text-gray-600">
+                                    <li>• Buckets = Workstreams</li>
+                                    <li>• Tasks = Deliverables</li>
+                                    <li>• Charts view for status</li>
+                                    <li>• Integration with Teams</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded border border-gray-300">
+                                <div class="font-bold text-gray-800">To Do / Project</div>
+                                <div class="text-xs text-gray-600">Personal task aggregation & complex dependencies</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="architecture-map">
+                    <!-- Control Layer -->
+                    <div class="arch-layer border-indigo-500">
+                        <div class="arch-layer-title text-indigo-600">Control Plane</div>
+                        <div class="space-y-3">
+                            <div class="bg-indigo-50 p-3 rounded border border-indigo-200">
+                                <div class="font-bold text-indigo-800">Power Automate</div>
+                                <div class="text-sm text-indigo-600">Workflows</div>
+                                <ul class="text-xs mt-2 space-y-1 text-gray-600">
+                                    <li>• ICP routing & notifications</li>
+                                    <li>• Approval Framework logic</li>
+                                    <li>• Evidence capture triggers</li>
+                                    <li>• SLA monitoring</li>
+                                </ul>
+                            </div>
+                            <div class="bg-indigo-50 p-3 rounded border border-indigo-200">
+                                <div class="font-bold text-indigo-800">Power Apps</div>
+                                <div class="text-xs text-gray-600">Custom forms for intake & exception handling</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Insights Layer -->
+                    <div class="arch-layer border-yellow-500">
+                        <div class="arch-layer-title text-yellow-600">Insights</div>
+                        <div class="space-y-3">
+                            <div class="bg-yellow-50 p-3 rounded border border-yellow-200">
+                                <div class="font-bold text-yellow-800">Power BI</div>
+                                <div class="text-sm text-yellow-700">Performance Radar</div>
+                                <ul class="text-xs mt-2 space-y-1 text-gray-600">
+                                    <li>• Close timeliness metrics</li>
+                                    <li>• Exception volume trends</li>
+                                    <li>• Control pass rates</li>
+                                    <li>• Embedded in Teams/SharePoint</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Governance Layer -->
+                    <div class="arch-layer border-purple-500">
+                        <div class="arch-layer-title text-purple-600">Governance</div>
+                        <div class="space-y-3">
+                            <div class="bg-purple-50 p-3 rounded border border-purple-200">
+                                <div class="font-bold text-purple-800">Purview</div>
+                                <div class="text-sm text-purple-600">Compliance & Retention</div>
+                                <ul class="text-xs mt-2 space-y-1 text-gray-600">
+                                    <li>• Sensitivity labels</li>
+                                    <li>• Retention policies</li>
+                                    <li>• Audit logs</li>
+                                    <li>• Evidence integrity</li>
+                                </ul>
+                            </div>
+                            <div class="bg-purple-50 p-3 rounded border border-purple-200">
+                                <div class="font-bold text-purple-800">Loop / OneNote</div>
+                                <div class="text-xs text-gray-600">Live documentation & meeting notes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gray-100 p-4 rounded border border-gray-300">
+                    <h3 class="font-bold mb-2">Migration Checklist</h3>
+                    <div class="grid grid-cols-3 gap-4 text-sm migration-checklist-grid">
+                        <div>
+                            <div class="font-semibold text-blue-700">Phase 1: Foundation</div>
+                            <ul class="mt-1 space-y-1 text-gray-600">
+                                <li><input type="checkbox" class="mr-1">Create Teams TOM Hub</li>
+                                <li><input type="checkbox" class="mr-1">Provision SharePoint Site</li>
+                                <li><input type="checkbox" class="mr-1">Configure Lists (ICP, ORM, etc.)</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-green-700">Phase 2: Execution</div>
+                            <ul class="mt-1 space-y-1 text-gray-600">
+                                <li><input type="checkbox" class="mr-1">Build Close Plan in Planner</li>
+                                <li><input type="checkbox" class="mr-1">Create RACI in Lists</li>
+                                <li><input type="checkbox" class="mr-1">Setup RCC calendar rhythm</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-purple-700">Phase 3: Automation</div>
+                            <ul class="mt-1 space-y-1 text-gray-600">
+                                <li><input type="checkbox" class="mr-1">Power Automate: ICP routing</li>
+                                <li><input type="checkbox" class="mr-1">Power Automate: Approvals</li>
+                                <li><input type="checkbox" class="mr-1">Power BI: Dashboards</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DASHBOARD VIEW -->
+            <div id="view-dashboard" class="view-section">
+                <div class="mb-4 flex justify-between items-end">
+                    <div>
+                        <span class="text-xs font-semibold text-purple-600 uppercase tracking-wider">Simulates: Teams Channel + SharePoint Home</span>
+                        <p class="text-sm text-gray-600 mt-1">Integrated view of Lists, Planner tasks, and Power BI tiles</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-6 mb-6 dashboard-metrics">
+                    <div class="card p-4 relative ms-card border-blue-500">
+                        <span class="tool-label badge-lists">Microsoft List</span>
+                        <div class="text-3xl font-bold text-blue-600" id="metric-open-items">12</div>
+                        <div class="text-sm text-gray-600">Open ICP Items</div>
+                        <div class="text-xs text-green-600 mt-1">Data source: ICP Register (List)</div>
+                    </div>
+                    <div class="card p-4 relative ms-card border-red-500">
+                        <span class="tool-label badge-lists">Microsoft List</span>
+                        <div class="text-3xl font-bold text-yellow-600" id="metric-risks">5</div>
+                        <div class="text-sm text-gray-600">Active Risks (ORM)</div>
+                        <div class="text-xs text-red-600 mt-1">Data source: ORM Register</div>
+                    </div>
+                    <div class="card p-4 relative ms-card border-green-500">
+                        <span class="tool-label badge-planner">Planner</span>
+                        <div class="text-3xl font-bold text-green-600" id="metric-completion">87%</div>
+                        <div class="text-sm text-gray-600">Close Plan Progress</div>
+                        <div class="text-xs text-gray-500 mt-1">Planner API aggregation</div>
+                    </div>
+                    <div class="card p-4 relative ms-card border-indigo-500">
+                        <span class="tool-label badge-automate">Automate</span>
+                        <div class="text-3xl font-bold text-purple-600" id="metric-pending">3</div>
+                        <div class="text-sm text-gray-600">Pending Approvals</div>
+                        <div class="text-xs text-gray-500 mt-1">Power Automate Approvals</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 dashboard-bottom">
+                    <div class="card p-6 relative">
+                        <span class="tool-label badge-teams">Teams Activity</span>
+                        <h3 class="font-semibold mb-4">Recent Activity Stream</h3>
+                        <div id="activity-stream" class="space-y-3">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div class="mt-4 pt-3 border-t text-xs text-gray-500">
+                            Replaces: Teams Channel conversation + SharePoint activity feed
+                        </div>
+                    </div>
+                    <div class="card p-6 relative">
+                        <span class="tool-label badge-lists">List View</span>
+                        <h3 class="font-semibold mb-4">RCC Meeting Actions</h3>
+                        <div id="rcc-actions" class="space-y-2">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded border-l-4 border-blue-500">
+                                <div>
+                                    <div class="text-sm font-medium">Approve Q3 methodology changes</div>
+                                    <div class="text-xs text-gray-500">Due: 3 days • Owner: Finance Lead</div>
+                                </div>
+                                <button class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Review</button>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t text-xs text-gray-500">
+                            Replaces: RCC Actions List embedded in Teams tab
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGISTERS VIEW -->
+            <div id="view-registers" class="view-section hidden">
+                <div class="mb-4 flex justify-between items-center">
+                    <div>
+                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Simulates: SharePoint Site Contents + List Web Parts</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Each card = SharePoint List</span>
+                    </div>
+                </div>
+
+                <div class="register-grid" id="registers-container">
+                    <!-- ICP Register Card -->
+                    <div class="card p-4 border-t-4 border-blue-500 relative">
+                        <span class="tool-label badge-lists">Microsoft List</span>
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-bold text-lg">ICP Register</h3>
+                                <p class="text-xs text-gray-500">Intake & Change Portfolio</p>
+                            </div>
+                            <span class="status-badge bg-blue-100 text-blue-800">8 Active</span>
+                        </div>
+                        <div class="space-y-2 mb-3" id="icp-preview"></div>
+                        <div class="text-xs text-gray-400 mb-2">Columns: Title, Triage Status, Owner, SLA, Priority</div>
+                        <button onclick="switchView('register-icp')" class="w-full py-2 text-sm text-blue-600 hover:bg-blue-50 rounded border border-blue-200">
+                            Open List View →
+                        </button>
+                    </div>
+
+                    <!-- SDP Register Card -->
+                    <div class="card p-4 border-t-4 border-green-500 relative">
+                        <span class="tool-label badge-lists">Microsoft List</span>
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-bold text-lg">SDP Register</h3>
+                                <p class="text-xs text-gray-500">Service Delivery Portfolio</p>
+                            </div>
+                            <span class="status-badge bg-yellow-100 text-yellow-800">3 In Planning</span>
+                        </div>
+                        <div class="space-y-2 mb-3">
+                            <div class="text-sm p-2 bg-gray-50 rounded flex justify-between">
+                                <span>Platform Migration</span>
+                                <span class="text-xs text-gray-400">Q2</span>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-400 mb-2">Linked to: Planner tasks (lookup column)</div>
+                        <button class="w-full py-2 text-sm text-green-600 hover:bg-green-50 rounded border border-green-200">Open List View →</button>
+                    </div>
+
+                    <!-- ORM Register Card -->
+                    <div class="card p-4 border-t-4 border-red-500 relative">
+                        <span class="tool-label badge-lists">Microsoft List</span>
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-bold text-lg">ORM Register</h3>
+                                <p class="text-xs text-gray-500">Operational Risk Management</p>
+                            </div>
+                            <span class="status-badge bg-red-100 text-red-800">High Priority</span>
+                        </div>
+                        <div class="space-y-2 mb-3">
+                            <div class="text-sm p-2 bg-red-50 rounded border-l-2 border-red-400">Data residency compliance</div>
+                        </div>
+                        <div class="text-xs text-gray-400 mb-2">Columns: Impact, Likelihood, Mitigation Plan</div>
+                        <button class="w-full py-2 text-sm text-red-600 hover:bg-red-50 rounded border border-red-200">Open List View →</button>
+                    </div>
+
+                    <!-- QACE Register Card -->
+                    <div class="card p-4 border-t-4 border-purple-500 relative">
+                        <span class="tool-label badge-lists">Microsoft List</span>
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-bold text-lg">QACE Register</h3>
+                                <p class="text-xs text-gray-500">Quality Assurance & Controls</p>
+                            </div>
+                            <span class="status-badge bg-green-100 text-green-800">92% Pass</span>
+                        </div>
+                        <div class="space-y-2 mb-3">
+                            <div class="flex justify-between text-sm">
+                                <span>Control Testing</span>
+                                <span class="text-green-600">94%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 94%"></div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-400 mb-2">Linked to: SharePoint Document Library (Evidence)</div>
+                        <button class="w-full py-2 text-sm text-purple-600 hover:bg-purple-50 rounded border border-purple-200">View Evidence Pack →</button>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-blue-50 p-4 rounded border border-blue-200">
+                    <h4 class="font-semibold text-blue-900 mb-2">📋 MS365 Implementation Note</h4>
+                    <p class="text-sm text-blue-800">
+                        These registers become <strong>Microsoft Lists</strong> in SharePoint. Use <strong>Power Apps</strong> to customize forms, 
+                        <strong>Power Automate</strong> for workflows, and embed as tabs in Teams channels. 
+                        Each List should have custom views: "My Items", "Overdue", "Executive Summary".
+                    </p>
+                </div>
+            </div>
+
+            <!-- ICP DETAIL VIEW -->
+            <div id="view-register-icp" class="view-section hidden">
+                <div class="mb-4">
+                    <button onclick="switchView('registers')" class="mobile-back-btn mb-3 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        Back to Registers
+                    </button>
+                    <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Simulates: Microsoft List - ICP Register (Modern View)</span>
+                </div>
+                
+                <div class="card overflow-hidden relative icp-table-wrapper">
+                    <div class="p-4 border-b bg-blue-50 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-lg">ICP Intake Queue</h3>
+                            <p class="text-sm text-gray-600">Structured intake with triage status, owner assignment, and SLA tracking</p>
+                        </div>
+                        <div class="text-right text-xs text-blue-800">
+                            <div>List: ICP_Register</div>
+                            <div>Site: TOM_Hub/SitePages/Home.aspx</div>
+                        </div>
+                    </div>
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 text-gray-700">
+                            <tr>
+                                <th class="p-3">ID</th>
+                                <th class="p-3">Title</th>
+                                <th class="p-3">Requestor</th>
+                                <th class="p-3">Triage Status</th>
+                                <th class="p-3">Owner</th>
+                                <th class="p-3">SLA</th>
+                                <th class="p-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="icp-table-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4 grid grid-cols-3 gap-4 text-xs icp-views-grid">
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <div class="font-semibold text-gray-700">View: All Items</div>
+                        <div class="text-gray-500">Default view with filtering</div>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <div class="font-semibold text-gray-700">View: My Intakes</div>
+                        <div class="text-gray-500">Filtered by [Me] in Owner field</div>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <div class="font-semibold text-gray-700">View: Overdue</div>
+                        <div class="text-gray-500">SLA Date < Today</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PLANNER VIEW -->
+            <div id="view-planner" class="view-section hidden">
+                <div class="mb-4">
+                    <span class="text-xs font-semibold text-green-600 uppercase tracking-wider">Simulates: Microsoft Planner (New) - TOM Plan</span>
+                    <p class="text-sm text-gray-600 mt-1">Will be linked to Teams "Close Plan" tab | Consider Project Online for complex dependencies</p>
+                </div>
+
+                <div class="mb-4 flex justify-between items-center bg-green-50 p-3 rounded border border-green-200 planner-toolbar">
+                    <div class="flex gap-4 items-center">
+                        <h3 class="font-bold text-lg text-green-900">Close Plan & Delivery Execution</h3>
+                        <select class="border rounded px-2 py-1 text-sm bg-white">
+                            <option>Current Sprint (Sprint 4)</option>
+                            <option>Sprint 3</option>
+                            <option>Sprint 5 (Future)</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 bg-white border rounded text-xs">Board View</span>
+                        <span class="px-2 py-1 bg-green-100 border border-green-300 rounded text-xs">Charts</span>
+                        <span class="px-2 py-1 bg-white border rounded text-xs">Schedule</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 overflow-x-auto pb-4 kanban-container">
+                    <!-- Buckets simulate Planner Buckets -->
+                    <div class="w-80 flex-shrink-0">
+                        <div class="flex justify-between items-center mb-2 bg-gray-200 p-2 rounded">
+                            <h4 class="font-semibold text-gray-700">Not Started</h4>
+                            <span class="text-xs bg-gray-300 px-2 py-1 rounded-full" id="count-not-started">2</span>
+                        </div>
+                        <div class="kanban-col p-2 space-y-2" id="col-not-started" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <div draggable="true" ondragstart="drag(event)" id="task-1" class="bg-white p-3 rounded shadow cursor-move border-l-4 border-gray-400">
+                                <div class="font-medium text-sm mb-1">Baseline financial controls</div>
+                                <div class="flex justify-between items-center text-xs text-gray-500">
+                                    <span>FC-101</span>
+                                    <span class="bg-red-100 text-red-800 px-1 rounded">High</span>
+                                </div>
+                                <div class="mt-2 text-xs text-green-700">📎 Checklist: 0/3</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-80 flex-shrink-0">
+                        <div class="flex justify-between items-center mb-2 bg-blue-100 p-2 rounded border border-blue-200">
+                            <h4 class="font-semibold text-blue-900">In Progress</h4>
+                            <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full" id="count-progress">3</span>
+                        </div>
+                        <div class="kanban-col p-2 space-y-2" id="col-progress" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    </div>
+
+                    <div class="w-80 flex-shrink-0">
+                        <div class="flex justify-between items-center mb-2 bg-yellow-100 p-2 rounded border border-yellow-200">
+                            <h4 class="font-semibold text-yellow-900">In Review</h4>
+                            <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full" id="count-review">1</span>
+                        </div>
+                        <div class="kanban-col p-2 space-y-2" id="col-review" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    </div>
+
+                    <div class="w-80 flex-shrink-0">
+                        <div class="flex justify-between items-center mb-2 bg-green-100 p-2 rounded border border-green-200">
+                            <h4 class="font-semibold text-green-900">Complete</h4>
+                            <span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full" id="count-complete">5</span>
+                        </div>
+                        <div class="kanban-col p-2 space-y-2" id="col-complete" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    </div>
+                </div>
+
+                <div class="mt-4 bg-green-50 p-4 rounded border border-green-200">
+                    <h4 class="font-semibold text-green-900 mb-2">📋 MS365 Implementation Note</h4>
+                    <p class="text-sm text-green-800 mb-2">
+                        <strong>Planner Integration:</strong> Create a Plan called "TOM Close Plan". Buckets = Workstreams (ICP, SDP, ORM, etc.). 
+                        Use Labels for priority. Link tasks to SharePoint List items via URL fields.
+                    </p>
+                    <p class="text-sm text-green-800">
+                        <strong>Teams Tab:</strong> Add Planner as tab in "Execution" channel. Enable "Charts" view for executive updates.
+                    </p>
+                </div>
+            </div>
+
+            <!-- AUTOMATIONS VIEW -->
+            <div id="view-automations" class="view-section hidden">
+                <div class="mb-6">
+                    <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Simulates: Power Automate Control Plane + Logic Flows</span>
+                    <p class="text-sm text-gray-600 mt-1">Cloud flows triggered by SharePoint List changes | Approval workflows | Teams notifications</p>
+                </div>
+
+                <div class="space-y-4" id="automation-flows">
+                    <!-- Flow 1 -->
+                    <div class="card p-4 border-l-4 border-blue-500 relative bg-blue-50">
+                        <span class="tool-label badge-automate">Power Automate</span>
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-blue-900">Flow: ICP Intake Router</h4>
+                                <p class="text-sm text-gray-700 mt-1">Trigger: When item created in ICP Register List</p>
+                                <div class="mt-3 flex gap-2 flex-wrap">
+                                    <span class="text-xs bg-white border border-blue-300 px-2 py-1 rounded">Action: Create Item</span>
+                                    <span class="text-xs bg-white border border-blue-300 px-2 py-1 rounded">Action: Send Teams Notification</span>
+                                    <span class="text-xs bg-white border border-blue-300 px-2 py-1 rounded">Action: Update Status</span>
+                                </div>
+                                <div class="mt-2 text-xs text-green-700 font-semibold">Status: On | Runs: 24 this week</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flow 2 -->
+                    <div class="card p-4 border-l-4 border-purple-500 relative bg-purple-50">
+                        <span class="tool-label badge-automate">Power Automate</span>
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-purple-900">Flow: Approval Framework</h4>
+                                <p class="text-sm text-gray-700 mt-1">Trigger: Status changed to "Pending Approval"</p>
+                                <div class="mt-3 flex gap-2 flex-wrap">
+                                    <span class="text-xs bg-white border border-purple-300 px-2 py-1 rounded">Condition: Check RACI AP</span>
+                                    <span class="text-xs bg-white border border-purple-300 px-2 py-1 rounded">Action: Start Approval</span>
+                                    <span class="text-xs bg-white border border-purple-300 px-2 py-1 rounded">Action: Lock Item (Permissions)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flow 3 -->
+                    <div class="card p-4 border-l-4 border-green-500 relative bg-green-50">
+                        <span class="tool-label badge-automate">Power Automate</span>
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-green-900">Flow: Evidence Auto-File</h4>
+                                <p class="text-sm text-gray-700 mt-1">Trigger: Planner task marked "Complete" OR List Status = "Done"</p>
+                                <div class="mt-3 flex gap-2 flex-wrap">
+                                    <span class="text-xs bg-white border border-green-300 px-2 py-1 rounded">Action: Move attachments to SharePoint</span>
+                                    <span class="text-xs bg-white border border-green-300 px-2 py-1 rounded">Action: Update QACE Register</span>
+                                    <span class="text-xs bg-white border border-green-300 px-2 py-1 rounded">Action: Log audit trail</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Test Console -->
+                    <div class="card p-4 bg-gray-900 text-green-400 font-mono text-sm rounded-lg border-2 border-gray-700">
+                        <div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2">
+                            <span class="font-bold text-white">Power Automate Test Console</span>
+                            <span class="text-xs text-gray-400">Simulates Flow execution logs</span>
+                        </div>
+                        <div class="flex gap-2 mb-3">
+                            <button onclick="simulateAutomation('intake')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">Test ICP Flow</button>
+                            <button onclick="simulateAutomation('approval')" class="px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">Test Approval</button>
+                            <button onclick="simulateAutomation('evidence')" class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">Test Evidence</button>
+                        </div>
+                        <div id="automation-log" class="h-32 overflow-y-auto text-xs space-y-1">
+                            <div>> Power Automate Ready...</div>
+                            <div>> Connected to: ICP_Register (SharePoint List)</div>
+                            <div>> Connected to: TOM Hub (Teams)</div>
+                            <div>> Connected to: Close Plan (Planner)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERFORMANCE RADAR VIEW -->
+            <div id="view-performance" class="view-section hidden">
+                <div class="mb-6">
+                    <span class="text-xs font-semibold text-yellow-600 uppercase tracking-wider">Simulates: Power BI Embedded + SharePoint Page</span>
+                    <p class="text-sm text-gray-600 mt-1">Data sources: SharePoint Lists (ICP, ORM) + Planner API | Refreshed: Hourly</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 performance-grid">
+                    <div class="card p-4 relative">
+                        <span class="tool-label badge-powerbi">Power BI</span>
+                        <h4 class="font-semibold mb-4">Close Timeliness Trend</h4>
+                        <canvas id="chart-timeliness" height="200"></canvas>
+                        <div class="mt-2 text-xs text-gray-500">Source: ICP Register [Close Date] vs [Target Date]</div>
+                    </div>
+                    
+                    <div class="card p-4 relative">
+                        <span class="tool-label badge-powerbi">Power BI</span>
+                        <h4 class="font-semibold mb-4">Exception Volumes by Category</h4>
+                        <canvas id="chart-exceptions" height="200"></canvas>
+                        <div class="mt-2 text-xs text-gray-500">Source: ORM Register grouped by [Category]</div>
+                    </div>
+                    
+                    <div class="card p-4 relative">
+                        <span class="tool-label badge-powerbi">Power BI</span>
+                        <h4 class="font-semibold mb-4">Control Pass Rate (QACE)</h4>
+                        <canvas id="chart-controls" height="200"></canvas>
+                        <div class="mt-2 text-xs text-gray-500">Source: QACE Register [Test Result]</div>
+                    </div>
+                    
+                    <div class="card p-4 relative">
+                        <span class="tool-label badge-powerbi">Power BI</span>
+                        <h4 class="font-semibold mb-4">TOM Adoption Metrics</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Teams Hub Active Users</span>
+                                    <span class="font-semibold">89%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 89%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Automated Workflow Adoption</span>
+                                    <span class="font-semibold">76%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 76%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-xs text-gray-500">Source: Microsoft 365 Usage Reports (Graph API)</div>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-yellow-50 p-4 rounded border border-yellow-200">
+                    <h4 class="font-semibold text-yellow-900 mb-2">📋 MS365 Implementation Note</h4>
+                    <p class="text-sm text-yellow-800">
+                        Create Power BI report "TOM Performance Radar" with SharePoint List connectors. 
+                        Publish to Power BI Service, then embed in SharePoint page using Power BI web part. 
+                        Add as Teams tab in "Insights" channel. Configure scheduled refresh (hourly).
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Fixed Bottom-Left View Mode Toggle -->
+        <div class="view-toggle-fixed" id="view-mode-toggle">
+            <div class="view-toggle">
+                <button id="toggle-desktop" class="active" onclick="setViewMode('desktop')">Desktop</button>
+                <button id="toggle-mobile" onclick="setViewMode('mobile')">Mobile</button>
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Navigation Bar -->
+        <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+            <button class="mobile-bottom-nav-item active" onclick="switchView('dashboard')" data-view="dashboard">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span>Command</span>
+            </button>
+            <button class="mobile-bottom-nav-item" onclick="switchView('registers')" data-view="registers">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                <span>Registers</span>
+            </button>
+            <button class="mobile-bottom-nav-item" onclick="switchView('planner')" data-view="planner">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                <span>Planner</span>
+            </button>
+            <button class="mobile-bottom-nav-item" onclick="switchView('automations')" data-view="automations">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span>Automate</span>
+            </button>
+            <button class="mobile-bottom-nav-item" onclick="switchView('performance')" data-view="performance">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span>Radar</span>
+            </button>
+            <button class="mobile-bottom-nav-item" onclick="switchView('architecture')" data-view="architecture">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <span>Arch</span>
+            </button>
+        </nav>
+    </main>
+
+    <!-- Intake Modal -->
+    <div id="intake-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg w-full max-w-lg p-6 border-2 border-blue-500">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="text-lg font-bold">New ICP Intake</h3>
+                    <p class="text-xs text-blue-600">Creates item in SharePoint List: ICP_Register</p>
+                </div>
+                <button onclick="closeIntakeModal()" class="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <form id="intake-form" onsubmit="submitIntake(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Title</label>
+                        <input type="text" id="intake-title" required class="mt-1 block w-full border rounded-md px-3 py-2 text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 modal-form-grid">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Requestor</label>
+                            <input type="text" id="intake-requestor" required class="mt-1 block w-full border rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Priority</label>
+                            <select id="intake-priority" class="mt-1 block w-full border rounded-md px-3 py-2 text-sm">
+                                <option>Low</option>
+                                <option selected>Medium</option>
+                                <option>High</option>
+                                <option>Critical</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="intake-desc" rows="3" class="mt-1 block w-full border rounded-md px-3 py-2 text-sm"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-2">
+                    <button type="button" onclick="closeIntakeModal()" class="px-4 py-2 border rounded text-sm">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
+                        Submit → Trigger Power Automate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // HTML escape helper to prevent XSS when rendering user input
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        // Data Store (simulating SharePoint Lists)
+        let tomData = {
+            icp: [
+                { id: 'ICP-001', title: 'Update close calendar', requestor: 'CFO Office', status: 'Active', owner: 'Finance Lead', sla: '2 days', priority: 'High' },
+                { id: 'ICP-002', title: 'New entity onboarding process', requestor: 'Legal', status: 'Triage', owner: 'TOM Admin', sla: '5 days', priority: 'Medium' },
+                { id: 'ICP-003', title: 'Automated reconciliation', requestor: 'Controller', status: 'Active', owner: 'IT', sla: '10 days', priority: 'High' },
+                { id: 'ICP-004', title: 'RCC meeting cadence change', requestor: 'COO', status: 'Pending Approval', owner: 'Chief of Staff', sla: '3 days', priority: 'Low' }
+            ],
+            activities: [
+                { time: '10 min ago', text: 'Power Automate: ICP-002 moved to Triage', type: 'auto' },
+                { time: '1 hour ago', text: 'Flow triggered: Evidence filed for SDP-45', type: 'auto' },
+                { time: '2 hours ago', text: 'SharePoint: Risk ORM-12 escalated to High', type: 'risk' },
+                { time: '4 hours ago', text: 'Teams: Approval granted in channel', type: 'approval' }
+            ]
+        };
+
+        // View Management
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active-nav'));
+            
+            const navMap = {
+                'dashboard': 'nav-dashboard',
+                'registers': 'nav-registers',
+                'register-icp': 'nav-registers',
+                'planner': 'nav-planner',
+                'automations': 'nav-automations',
+                'performance': 'nav-performance',
+                'architecture': 'nav-architecture'
+            };
+            
+            if (navMap[viewName]) {
+                document.getElementById(navMap[viewName]).classList.add('active-nav');
+            }
+
+            // Sync mobile bottom nav active state
+            document.querySelectorAll('.mobile-bottom-nav-item').forEach(btn => {
+                btn.classList.remove('active');
+                const btnView = btn.getAttribute('data-view');
+                if (btnView === viewName || (viewName === 'register-icp' && btnView === 'registers')) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Update MS Equivalence Label
+            const msEquiv = document.getElementById('ms-equivalent');
+            const titles = {
+                'dashboard': 'Command Center',
+                'registers': 'Structured Registers',
+                'register-icp': 'ICP Register Detail',
+                'planner': 'Close Plan Board',
+                'automations': 'Power Automate Flows',
+                'performance': 'Performance Radar',
+                'architecture': 'System Architecture'
+            };
+            
+            const equivText = {
+                'dashboard': 'Replaces: Teams (Hub) + SharePoint (Home)',
+                'registers': 'Replaces: SharePoint Site Contents + List Web Parts',
+                'register-icp': 'Replaces: Microsoft List - ICP_Register',
+                'planner': 'Replaces: Planner Plan "TOM Close Plan"',
+                'automations': 'Replaces: Power Automate Cloud Flows',
+                'performance': 'Replaces: Power BI Embedded + Teams Tab',
+                'architecture': 'Documentation: MS365 Target Architecture'
+            };
+            
+            document.getElementById('page-title').textContent = titles[viewName] || 'TOM OS';
+            if (msEquiv && equivText[viewName]) msEquiv.textContent = equivText[viewName];
+
+            if (viewName === 'dashboard') renderDashboard();
+            if (viewName === 'registers' || viewName === 'register-icp') renderRegisters();
+            if (viewName === 'performance') initCharts();
+        }
+
+        function renderDashboard() {
+            const stream = document.getElementById('activity-stream');
+            if (stream) {
+                stream.innerHTML = tomData.activities.map(act => `
+                    <div class="flex items-start gap-3 text-sm p-2 hover:bg-gray-50 rounded border-l-2 ${act.type === 'auto' ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}">
+                        <div class="flex-1">
+                            <div class="font-medium">${escapeHtml(act.text)}</div>
+                            <div class="text-xs text-gray-500">${escapeHtml(act.time)} • ${act.type === 'auto' ? 'Power Automate' : 'SharePoint'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderRegisters() {
+            const icpPreview = document.getElementById('icp-preview');
+            if (icpPreview) {
+                icpPreview.innerHTML = tomData.icp.slice(0, 3).map(item => `
+                    <div class="text-sm p-2 bg-gray-50 rounded flex justify-between items-center border border-gray-200">
+                        <span class="truncate font-medium">${escapeHtml(item.title)}</span>
+                        <span class="text-xs px-2 py-1 rounded-full ${item.status === 'Active' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}">${escapeHtml(item.status)}</span>
+                    </div>
+                `).join('');
+            }
+
+            const icpTable = document.getElementById('icp-table-body');
+            if (icpTable) {
+                icpTable.innerHTML = tomData.icp.map(item => `
+                    <tr class="border-b hover:bg-blue-50 transition-colors">
+                        <td class="p-3 font-mono text-xs text-gray-600">${escapeHtml(item.id)}</td>
+                        <td class="p-3 font-medium text-gray-900">${escapeHtml(item.title)}</td>
+                        <td class="p-3 text-sm text-gray-600">${escapeHtml(item.requestor)}</td>
+                        <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${item.status === 'Active' ? 'bg-blue-100 text-blue-800' : item.status === 'Triage' ? 'bg-yellow-100 text-yellow-800' : 'bg-purple-100 text-purple-800'}">${escapeHtml(item.status)}</span></td>
+                        <td class="p-3 text-sm">${escapeHtml(item.owner)}</td>
+                        <td class="p-3 text-sm text-gray-600">${escapeHtml(item.sla)}</td>
+                        <td class="p-3"><button class="text-blue-600 hover:underline text-xs">Edit</button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function openIntakeModal() { document.getElementById('intake-modal').classList.remove('hidden'); }
+        function closeIntakeModal() { document.getElementById('intake-modal').classList.add('hidden'); }
+
+        function submitIntake(e) {
+            e.preventDefault();
+            const newId = `ICP-${String(tomData.icp.length + 1).padStart(3, '0')}`;
+            const newItem = {
+                id: newId,
+                title: document.getElementById('intake-title').value,
+                requestor: document.getElementById('intake-requestor').value,
+                status: 'Triage',
+                owner: 'TOM Admin',
+                sla: '5 days',
+                priority: document.getElementById('intake-priority').value
+            };
+            
+            tomData.icp.unshift(newItem);
+            tomData.activities.unshift({ time: 'Just now', text: `Power Automate triggered for ${newId}`, type: 'auto' });
+            
+            simulateAutomation('intake', newId);
+            closeIntakeModal();
+            document.getElementById('intake-form').reset();
+            renderRegisters();
+            document.getElementById('metric-open-items').textContent = tomData.icp.length;
+        }
+
+        function simulateAutomation(type, refId) {
+            const log = document.getElementById('automation-log');
+            if (!log) return;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let messages = [];
+            
+            switch(type) {
+                case 'intake':
+                    messages = [
+                        `[${timestamp}] 🔄 Flow Triggered: "When item created in ICP_Register"`,
+                        `[${timestamp}] ✅ Action: Create item in SharePoint List`,
+                        `[${timestamp}] 📧 Action: Send Teams notification to #triage-channel`,
+                        `[${timestamp}] 👤 Action: Set Owner = TOM Admin`,
+                        `[${timestamp}] 🔔 Action: Send email to requestor`,
+                        `[${timestamp}] ✔️ Flow completed successfully (Duration: 2.4s)`
+                    ];
+                    break;
+                case 'approval':
+                    messages = [
+                        `[${timestamp}] 🔄 Flow Triggered: "Start and wait for approval"`,
+                        `[${timestamp}] 📋 Condition: Check RACI AP matrix`,
+                        `[${timestamp}] 👤 Action: Route to Chief of Staff`,
+                        `[${timestamp}] 🔒 Action: Set item permissions (Read-only)`,
+                        `[${timestamp}] ⏳ Status: Waiting for response...`
+                    ];
+                    break;
+                case 'evidence':
+                    messages = [
+                        `[${timestamp}] 🔄 Flow Triggered: "When task completed"`,
+                        `[${timestamp}] 📁 Action: Move attachments to SharePoint /Evidence/`,
+                        `[${timestamp}] 🔗 Action: Update QACE Register [EvidenceLink]`,
+                        `[${timestamp}] 📝 Action: Write to Audit Log`,
+                        `[${timestamp}] ✔️ Flow completed`
+                    ];
+                    break;
+            }
+            
+            log.innerHTML = messages.map(m => `<div>${m}</div>`).join('') + log.innerHTML;
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const el = document.getElementById(data);
+            
+            let dropZone = ev.target;
+            while (!dropZone.classList.contains('kanban-col') && dropZone.parentElement) {
+                dropZone = dropZone.parentElement;
+            }
+            
+            if (dropZone.classList.contains('kanban-col')) {
+                dropZone.appendChild(el);
+                updateCounts();
+                if (dropZone.id === 'col-complete') {
+                    simulateAutomation('evidence');
+                }
+            }
+        }
+
+        function updateCounts() {
+            ['not-started', 'progress', 'review', 'complete'].forEach(col => {
+                const count = document.getElementById(`col-${col}`).children.length;
+                const badge = document.getElementById(`count-${col}`);
+                if (badge) badge.textContent = count;
+            });
+        }
+
+        function initCharts() {
+            if (window.timelinessChart) return; // Prevent re-init
+
+            const commonOptions = { responsive: true, plugins: { legend: { display: false } } };
+
+            const ctx1 = document.getElementById('chart-timeliness');
+            if (ctx1) {
+                window.timelinessChart = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                        datasets: [{ label: 'On-Time %', data: [85, 87, 86, 89], borderColor: '#0078d4', tension: 0.4 }]
+                    },
+                    options: commonOptions
+                });
+            }
+
+            const ctx2 = document.getElementById('chart-exceptions');
+            if (ctx2) {
+                window.exceptionsChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Process', 'System', 'Data', 'Compliance'],
+                        datasets: [{ data: [5, 3, 8, 2], backgroundColor: ['#0078d4', '#106ebe', '#005a9e', '#004578'] }]
+                    },
+                    options: commonOptions
+                });
+            }
+
+            const ctx3 = document.getElementById('chart-controls');
+            if (ctx3) {
+                window.controlsChart = new Chart(ctx3, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Pass', 'Fail', 'Not Tested'],
+                        datasets: [{ data: [94, 4, 2], backgroundColor: ['#28a745', '#dc3545', '#6c757d'] }]
+                    },
+                    options: commonOptions
+                });
+            }
+        }
+
+        // ===== VIEW MODE TOGGLE (Desktop / Mobile) =====
+        function setViewMode(mode) {
+            const body = document.body;
+            const desktopBtn = document.getElementById('toggle-desktop');
+            const mobileBtn = document.getElementById('toggle-mobile');
+            const sidebar = document.getElementById('app-sidebar');
+            const closeBtn = document.querySelector('.sidebar-close-btn');
+
+            if (mode === 'mobile') {
+                body.classList.add('mobile-mode');
+                desktopBtn.classList.remove('active');
+                mobileBtn.classList.add('active');
+                if (closeBtn) closeBtn.style.display = 'block';
+                // Close sidebar when switching to mobile
+                closeSidebar();
+            } else {
+                body.classList.remove('mobile-mode');
+                desktopBtn.classList.add('active');
+                mobileBtn.classList.remove('active');
+                if (closeBtn) closeBtn.style.display = 'none';
+                // Reset sidebar state
+                sidebar.classList.remove('sidebar-open');
+                document.getElementById('sidebar-overlay').classList.remove('open');
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('sidebar-open');
+            overlay.classList.toggle('open');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.remove('sidebar-open');
+            overlay.classList.remove('open');
+        }
+
+        // ===== CLICKABLE TOOL-LABEL PILLS (mobile → navigate to view) =====
+        function initClickablePills() {
+            const badgeViewMap = {
+                'badge-lists': 'registers',
+                'badge-planner': 'planner',
+                'badge-automate': 'automations',
+                'badge-teams': 'dashboard',
+                'badge-powerbi': 'performance'
+            };
+
+            document.querySelectorAll('.tool-label').forEach(label => {
+                if (label.dataset.pillInit) return;
+                label.dataset.pillInit = '1';
+
+                label.addEventListener('click', function() {
+                    if (!document.body.classList.contains('mobile-mode')) return;
+                    for (const [cls, view] of Object.entries(badgeViewMap)) {
+                        if (label.classList.contains(cls)) {
+                            switchView(view);
+                            return;
+                        }
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDashboard();
+            renderRegisters();
+            updateCounts();
+            initClickablePills();
+
+            // Close sidebar when a nav link is clicked in mobile mode
+            document.querySelectorAll('.sidebar-item').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (document.body.classList.contains('mobile-mode')) {
+                        closeSidebar();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
