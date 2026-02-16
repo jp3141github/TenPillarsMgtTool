@@ -6,7 +6,7 @@ import Dashboard from "@/pages/Dashboard";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { LayoutProvider } from "./contexts/LayoutContext";
+import { LayoutProvider, useLayout } from "./contexts/LayoutContext";
 
 
 function Router() {
@@ -21,11 +21,16 @@ function Router() {
 }
 
 function AppToggle({ activeApp, onToggle }: { activeApp: 'pillars' | 'ms365'; onToggle: (app: 'pillars' | 'ms365') => void }) {
+  const { layout } = useLayout();
+  const isMobile = layout === 'mobile';
+
   return (
     <div style={{
       position: 'fixed',
       top: 8,
-      left: 8,
+      ...(isMobile
+        ? { left: '50%', transform: 'translateX(-50%)' }
+        : { left: 8 }),
       zIndex: 9999,
       display: 'flex',
       alignItems: 'center',
