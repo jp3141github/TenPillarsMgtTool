@@ -770,13 +770,29 @@ export default function Dashboard() {
       </div>
 
       {/* Channel Chat Panel */}
-      {openChannel && (
+      {!isMobile && openChannel && (
         <TeamsChannelChat
           channel={openChannel}
           messages={channelMessages[openChannel.number] || []}
           onSendMessage={handleSendMessage}
           onClose={handleCloseChannel}
         />
+      )}
+      {isMobile && (
+        <Sheet open={!!openChannel} onOpenChange={(open) => { if (!open) handleCloseChannel(); }}>
+          <SheetContent side="right" className="w-full sm:max-w-full p-0 [&>button:last-child]:hidden">
+            <SheetTitle className="sr-only">Channel Chat</SheetTitle>
+            {openChannel && (
+              <TeamsChannelChat
+                channel={openChannel}
+                messages={channelMessages[openChannel.number] || []}
+                onSendMessage={handleSendMessage}
+                onClose={handleCloseChannel}
+                isMobile
+              />
+            )}
+          </SheetContent>
+        </Sheet>
       )}
 
       <AddListModal
