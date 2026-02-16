@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Send, Hash } from 'lucide-react';
+import { X, Send, Hash, ArrowLeft } from 'lucide-react';
 import { ChannelMessage, ChannelInfo } from '@/lib/types';
 
 const CHANNEL_COLORS: Record<string, string> = {
@@ -27,6 +27,7 @@ interface TeamsChannelChatProps {
   messages: ChannelMessage[];
   onSendMessage: (channelNumber: string, text: string) => void;
   onClose: () => void;
+  isMobile?: boolean;
 }
 
 function formatMessageTime(isoString: string): string {
@@ -42,7 +43,7 @@ function formatMessageTime(isoString: string): string {
     ' ' + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function TeamsChannelChat({ channel, messages, onSendMessage, onClose }: TeamsChannelChatProps) {
+export default function TeamsChannelChat({ channel, messages, onSendMessage, onClose, isMobile }: TeamsChannelChatProps) {
   const [draft, setDraft] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -77,17 +78,25 @@ export default function TeamsChannelChat({ channel, messages, onSendMessage, onC
   };
 
   return (
-    <div className="flex flex-col h-full bg-background border-l border-border" style={{ width: 420 }}>
+    <div className={`flex flex-col h-full bg-background ${isMobile ? 'w-full' : 'border-l border-border'}`} style={isMobile ? undefined : { width: 420 }}>
       {/* Channel Header */}
       <div className={`flex items-center justify-between px-4 py-3 border-b-2 ${CHANNEL_ACCENT[channel.number] || 'border-border'} bg-card`}>
         <div className="flex items-center gap-2 min-w-0">
+          {isMobile ? (
+            <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0 -ml-2 mr-1 gap-1">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm">Back</span>
+            </Button>
+          ) : null}
           <Hash className="w-4 h-4 text-muted-foreground shrink-0" />
           <Badge className={`${CHANNEL_COLORS[channel.number]} shrink-0`}>{channel.number}</Badge>
           <span className="font-semibold text-sm text-foreground truncate">{channel.name}</span>
         </div>
-        <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0 ml-2">
-          <X className="w-4 h-4" />
-        </Button>
+        {!isMobile && (
+          <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0 ml-2">
+            <X className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
       {/* Channel description */}
