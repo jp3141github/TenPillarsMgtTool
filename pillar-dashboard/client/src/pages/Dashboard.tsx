@@ -13,6 +13,7 @@ import BulkCSVImportModal from '@/components/BulkCSVImportModal';
 import TOMSection from '@/components/TOMSection';
 import CorporateMode from '@/components/CorporateMode';
 import TeamsChannelChat from '@/components/TeamsChannelChat';
+import PillarContent, { OperatingRuleBanner, GlobalFooter } from '@/components/PillarContent';
 import { DashboardData, List as DataList, ChannelMessage, ChannelInfo } from '@/lib/types';
 import { DEFAULT_PILLARS, saveData, loadData, getStorageUsage } from '@/lib/storage';
 import { parseCSV, exportToCSV, downloadCSV } from '@/lib/csv';
@@ -486,65 +487,85 @@ export default function Dashboard() {
         <CorporateMode />
       ) : activeView === 'tom' ? (
         <TOMSection onOpenChannel={handleOpenChannel} />
-      ) : allLists.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="pt-12 pb-12 text-center">
-            <p className="text-muted-foreground mb-4">No lists yet. Create your first list to get started.</p>
-            <Button onClick={() => setShowAddListModal(true)}>
-              <Plus className="w-4 h-4 mr-2" /> Create List
-            </Button>
-          </CardContent>
-        </Card>
-      ) : filteredIndices.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="pt-12 pb-12 text-center">
-            <p className="text-muted-foreground mb-4">No lists match "{searchQuery}"</p>
-            <Button variant="outline" onClick={() => setSearchQuery('')}>
-              Clear Search
-            </Button>
-          </CardContent>
-        </Card>
       ) : (
-        <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
-          {filteredIndices.map(idx => {
-            const list = lists[idx];
-            return (
-              <Card key={list.id}>
-                <CardHeader className={isMobile ? 'pb-2 px-3 pt-3' : 'pb-3'}>
-                  <div className={isMobile ? 'space-y-2' : 'flex items-center justify-between'}>
-                    <div className={isMobile ? '' : undefined}>
-                      <CardTitle className={isMobile ? 'text-base' : 'text-lg'}>{list.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {list.cols} columns x {list.rows} rows - Updated {formatDate(list.lastEdited)}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleExportCSV(idx)} className="gap-2">
-                        <Download className="w-4 h-4" />{!isMobile && ' CSV'}
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => { setEditingListIndex(idx); setShowEditListModal(true); }} className="gap-2">
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteList(idx)} className="gap-2 text-destructive hover:text-destructive">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className={isMobile ? 'px-3 pb-3' : undefined}>
-                  <ListTable
-                    list={list}
-                    listIndex={idx}
-                    onUpdateCell={handleUpdateCell}
-                    onUpdateHeader={handleUpdateHeader}
-                    onAddRow={() => handleAddRow(idx)}
-                    searchQuery={searchQuery}
-                  />
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <>
+          {/* Operating rule banner + pillar governance content */}
+          <OperatingRuleBanner isMobile={isMobile} />
+          {pillar && (
+            <PillarContent
+              pillarId={pillar.id}
+              pillarName={pillar.name}
+              pillarIcon={pillar.icon}
+              pillarColor={pillar.color}
+              isMobile={isMobile}
+            />
+          )}
+
+          {/* Lists section */}
+          {allLists.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="pt-12 pb-12 text-center">
+                <p className="text-muted-foreground mb-4">No lists yet. Create your first list to get started.</p>
+                <Button onClick={() => setShowAddListModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" /> Create List
+                </Button>
+              </CardContent>
+            </Card>
+          ) : filteredIndices.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="pt-12 pb-12 text-center">
+                <p className="text-muted-foreground mb-4">No lists match "{searchQuery}"</p>
+                <Button variant="outline" onClick={() => setSearchQuery('')}>
+                  Clear Search
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
+              {filteredIndices.map(idx => {
+                const list = lists[idx];
+                return (
+                  <Card key={list.id}>
+                    <CardHeader className={isMobile ? 'pb-2 px-3 pt-3' : 'pb-3'}>
+                      <div className={isMobile ? 'space-y-2' : 'flex items-center justify-between'}>
+                        <div className={isMobile ? '' : undefined}>
+                          <CardTitle className={isMobile ? 'text-base' : 'text-lg'}>{list.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {list.cols} columns x {list.rows} rows - Updated {formatDate(list.lastEdited)}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleExportCSV(idx)} className="gap-2">
+                            <Download className="w-4 h-4" />{!isMobile && ' CSV'}
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => { setEditingListIndex(idx); setShowEditListModal(true); }} className="gap-2">
+                            <Settings className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteList(idx)} className="gap-2 text-destructive hover:text-destructive">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className={isMobile ? 'px-3 pb-3' : undefined}>
+                      <ListTable
+                        list={list}
+                        listIndex={idx}
+                        onUpdateCell={handleUpdateCell}
+                        onUpdateHeader={handleUpdateHeader}
+                        onAddRow={() => handleAddRow(idx)}
+                        searchQuery={searchQuery}
+                      />
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Global footer */}
+          <GlobalFooter isMobile={isMobile} />
+        </>
       )}
     </div>
   );
