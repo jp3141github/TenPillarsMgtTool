@@ -668,8 +668,8 @@ export default function Dashboard() {
           </Sheet>
 
           <div className="flex-1 flex flex-col overflow-hidden w-full">
-            {/* Mobile Command Bar */}
-            <div className="bg-card border-b border-border flex-shrink-0">
+            {/* Mobile Command Bar — pt-10 to clear the fixed AppToggle pill */}
+            <div className="bg-card border-b border-border flex-shrink-0 pt-10">
               {/* Top row: hamburger, title, key toggles */}
               <div className="h-12 flex items-center justify-between px-3">
                 <div className="flex items-center gap-2">
