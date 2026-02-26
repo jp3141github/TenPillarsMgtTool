@@ -38,7 +38,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     purpose:
       'Keep the production line moving  - predictable delivery, no heroics.',
     outcome:
-      'One integrated critical path across Lloyd's, Group, IFRS 17  - with explicit cut-offs and visible ownership.',
+      'One integrated critical path across Lloyd\'s, Group, IFRS 17  - with explicit cut-offs and visible ownership.',
     nonNegotiables: [
       'One close plan (not 3 parallel projects).',
       'Work starts only when triaged and owned (no "drive-bys").',
@@ -99,7 +99,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Recurring incident count down',
     ],
     failureModes: [
-      '"We'll fix it next quarter" purgatory.',
+      '"We\'ll fix it next quarter" purgatory.',
       'No owners.',
       'No measurement.',
     ],
@@ -142,7 +142,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     outcome:
       'Every dataset has a contract: owner, cadence, versioning, checks, lineage.',
     nonNegotiables: [
-      'If it isn't registered, it isn't an input.',
+      'If it isn\'t registered, it isn\'t an input.',
       'Data quality is measured and visible (not discovered at sign-off).',
       'Access, permissions, and "golden sources" are explicit.',
     ],
@@ -179,7 +179,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     ],
     mvpSetup: [
       'DoD per deliverable (checklist).',
-      'RACI AP recorded so sign-off doesn't stall.',
+      'RACI AP recorded so sign-off doesn\'t stall.',
       'QACE pack: controls register + evidence links + pass/warn/fail outcomes.',
     ],
     artefacts: [
@@ -285,7 +285,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     failureModes: [
       'Risks in heads not registers.',
       'Issues reopened repeatedly.',
-      '"We'll explain it in committee."',
+      '"We\'ll explain it in committee."',
     ],
     whereItLives: [],
   },
