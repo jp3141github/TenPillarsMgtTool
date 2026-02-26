@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Download, Settings, RefreshCw, ChevronLeft, Upload, Moon, Sun, Search, X, Undo2, Redo2, Briefcase, Menu, Monitor, Smartphone, MoreVertical } from 'lucide-react';
+import { Plus, Trash2, Download, Settings, RefreshCw, ChevronLeft, ChevronRight, Upload, Moon, Sun, Search, X, Undo2, Redo2, Briefcase, Menu, Monitor, Smartphone, MoreVertical, PanelLeftOpen } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import ListTable from '@/components/ListTable';
 import AddListModal from '@/components/AddListModal';
@@ -575,7 +575,20 @@ export default function Dashboard() {
       {/* ===== DESKTOP LAYOUT (unchanged) ===== */}
       {!isMobile && (
         <>
-          {sidebarOpen && <Sidebar {...sidebarProps} />}
+          {sidebarOpen ? (
+            <Sidebar {...sidebarProps} />
+          ) : (
+            /* Collapsed sidebar rail - visible strip to click to expand */
+            <div
+              className="h-full w-10 bg-card border-r border-border flex flex-col items-center flex-shrink-0 cursor-pointer hover:bg-accent/50 transition-colors group"
+              onClick={() => setSidebarOpen(true)}
+              title="Open sidebar"
+            >
+              <div className="flex flex-col items-center justify-center h-full gap-2">
+                <PanelLeftOpen className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              </div>
+            </div>
+          )}
 
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Command Bar */}
@@ -588,7 +601,7 @@ export default function Dashboard() {
                   className="gap-2"
                   title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
                 >
-                  <ChevronLeft className={`w-4 h-4 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
+                  {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </Button>
                 <span className="text-sm text-muted-foreground">
                   {activeView === 'tom'
