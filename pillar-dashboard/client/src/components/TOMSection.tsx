@@ -179,7 +179,7 @@ const TOM_STAGES: TOMStage[] = [
     code: 'PR',
     name: 'Performance Radar',
     purpose: 'Small set of operational indicators that tells you if delivery is healthy (not vibes).',
-    mvpSetup: 'Basic KPI cockpit in Power BI or Excel (5\u201310 metrics).',
+    mvpSetup: 'Basic KPI cockpit in Power BI or Excel (5-10 metrics).',
     artefacts: 'Timeliness, defects/rework, late changes, reruns, bottlenecks by stage.',
     livesIn: 'Channel I (broadcast)',
     tools: 'Power BI, Excel',
@@ -190,7 +190,7 @@ const TOM_STAGES: TOMStage[] = [
     id: 11,
     code: 'Automation',
     name: 'Automation',
-    purpose: 'Remove repeatable manual effort with controls, logging, monitoring \u2014 speed up without breaking governance.',
+    purpose: 'Remove repeatable manual effort with controls, logging, monitoring  - speed up without breaking governance.',
     mvpSetup: 'Power Automate "lite": Forms \u2192 Lists (optionally post to Teams). Build the control skeleton first.',
     artefacts: 'Run logs, rerun tracking, automated notifications, basic monitoring hooks.',
     livesIn: 'Channel III',
@@ -226,7 +226,7 @@ const TOM_STAGES: TOMStage[] = [
     id: 14,
     code: 'CTI',
     name: 'Cross-Team Integration',
-    purpose: 'Operating contract with adjacent teams (Finance etc.) \u2014 prevents handoff chaos becoming a monthly sport.',
+    purpose: 'Operating contract with adjacent teams (Finance etc.)  - prevents handoff chaos becoming a monthly sport.',
     mvpSetup: 'Shared dependency list + Teams shared channel for cross-team asks and handoffs.',
     artefacts: 'Dependency tracker, SLAs/cut-offs, escalation path, "definitions" page for disputed numbers.',
     livesIn: 'Channel III',
@@ -264,7 +264,7 @@ export default function TOMSection({ onOpenChannel }: TOMSectionProps) {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-foreground">Target Operating Model (TOM)</h2>
-        <p className="text-muted-foreground mt-1">Level 1 MVP &mdash; 15-stage implementation checklist</p>
+        <p className="text-muted-foreground mt-1">Level 1 MVP - 15-stage implementation checklist</p>
       </div>
 
       {/* Operating Rules */}
@@ -298,7 +298,7 @@ export default function TOMSection({ onOpenChannel }: TOMSectionProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            One front door, one register, one task board, one evidence home &mdash;
+            One front door, one register, one task board, one evidence home -
             kill drive-bys, kill lost work, kill undocumented sign-off.
           </p>
         </CardContent>
@@ -349,7 +349,7 @@ export default function TOMSection({ onOpenChannel }: TOMSectionProps) {
                   </span>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                     <span className="font-semibold text-sm text-foreground">
-                      {stage.code} &mdash; {stage.name}
+                      {stage.code} - {stage.name}
                     </span>
                     <Badge className={`${CHANNEL_COLORS[stage.channelNumber]} text-[10px] shrink-0`}>
                       Ch {stage.channelNumber}

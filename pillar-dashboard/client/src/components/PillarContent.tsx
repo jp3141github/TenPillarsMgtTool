@@ -36,13 +36,13 @@ interface PillarSection {
 const PILLAR_CONTENT: Record<string, PillarSection> = {
   pillar1: {
     purpose:
-      'Keep the production line moving \u2014 predictable delivery, no heroics.',
+      'Keep the production line moving  - predictable delivery, no heroics.',
     outcome:
-      'One integrated critical path across Lloyd\u2019s, Group, IFRS 17 \u2014 with explicit cut-offs and visible ownership.',
+      'One integrated critical path across Lloyd's, Group, IFRS 17  - with explicit cut-offs and visible ownership.',
     nonNegotiables: [
       'One close plan (not 3 parallel projects).',
-      'Work starts only when triaged and owned (no \u201cdrive-bys\u201d).',
-      'WIP discipline \u2014 finish before starting more.',
+      'Work starts only when triaged and owned (no "drive-bys").',
+      'WIP discipline  - finish before starting more.',
     ],
     mvpSetup: [
       'Intake front door + triage (ICP).',
@@ -52,7 +52,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     artefacts: [
       'Close calendar + dependency tracker.',
       'Run log + submission manifest.',
-      '\u201cCurrent vs archive\u201d folder structure for outputs.',
+      '"Current vs archive" folder structure for outputs.',
     ],
     signals: [
       'On-time %',
@@ -64,7 +64,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     failureModes: [
       'Untriaged work.',
       'Invisible blockers.',
-      '\u201cDone\u201d with no evidence link.',
+      '"Done" with no evidence link.',
     ],
     whereItLives: [
       'ICP in Channel II.',
@@ -74,7 +74,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
   },
   pillar2: {
     purpose:
-      'Make each close cheaper, safer, faster \u2014 deliberately (not by \u201cworking harder\u201d).',
+      'Make each close cheaper, safer, faster  - deliberately (not by "working harder").',
     outcome:
       'Improvements land weekly, tracked like real work, measured for impact.',
     nonNegotiables: [
@@ -85,7 +85,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     mvpSetup: [
       'CIP (improvement pipeline) in Lists: ideas, defects, lessons learned.',
       'TUP backlog: tooling upgrades sequenced without breaking BAU.',
-      'Post-close retro cadence (\u201cClose +7 days\u201d) with named actions.',
+      'Post-close retro cadence ("Close +7 days") with named actions.',
     ],
     artefacts: [
       'CI backlog + roadmap (ranked by risk reduction + hours saved).',
@@ -99,7 +99,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Recurring incident count down',
     ],
     failureModes: [
-      '\u201cWe\u2019ll fix it next quarter\u201d purgatory.',
+      '"We'll fix it next quarter" purgatory.',
       'No owners.',
       'No measurement.',
     ],
@@ -107,12 +107,12 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
   },
   pillar3: {
     purpose:
-      'Control the narrative internally \u2014 reduce churn, reduce pinging, speed up decisions.',
+      'Control the narrative internally  - reduce churn, reduce pinging, speed up decisions.',
     outcome:
       'Leadership gets a stable story they can challenge and sign.',
     nonNegotiables: [
-      'One published truth source (Noticeboard ABCD) \u2014 debate happens elsewhere.',
-      '\u201cOne-page story\u201d per deliverable: what moved, why, so what, actions.',
+      'One published truth source (Noticeboard ABCD)  - debate happens elsewhere.',
+      '"One-page story" per deliverable: what moved, why, so what, actions.',
       'Cadence beats ad-hoc chaos (daily pulse in close week, weekly RCC snapshot).',
     ],
     mvpSetup: [
@@ -126,7 +126,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     ],
     signals: [
       'Stakeholder chase-downs down',
-      'Fewer \u201cwhat is this?\u201d queries',
+      'Fewer "what is this?" queries',
       'Fewer late surprises',
     ],
     failureModes: [
@@ -142,9 +142,9 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     outcome:
       'Every dataset has a contract: owner, cadence, versioning, checks, lineage.',
     nonNegotiables: [
-      'If it isn\u2019t registered, it isn\u2019t an input.',
+      'If it isn't registered, it isn't an input.',
       'Data quality is measured and visible (not discovered at sign-off).',
-      'Access, permissions, and \u201cgolden sources\u201d are explicit.',
+      'Access, permissions, and "golden sources" are explicit.',
     ],
     mvpSetup: [
       'IOR (I/O Register): input name, owner, location, cadence, version stamp, output consumers.',
@@ -159,27 +159,27 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Late input rate',
       'DQ failures by source',
       'Time-to-detect issues',
-      '\u201cUnknown version\u201d count = zero',
+      '"Unknown version" count = zero',
     ],
     failureModes: [
       'Spreadsheet archaeology.',
       'Silent schema changes.',
-      '\u201cWorks on my machine\u201d pipelines.',
+      '"Works on my machine" pipelines.',
     ],
     whereItLives: [],
   },
   pillar5: {
     purpose:
-      'Make trust automatic \u2014 audit-ready by default, not by scramble.',
+      'Make trust automatic  - audit-ready by default, not by scramble.',
     outcome:
       'Every run produces an evidence pack, every number has lineage, every change has approval.',
     nonNegotiables: [
       'Operational Playbook + Approval Framework are mandatory for anything that hits committees/submissions.',
-      '\u201cDone\u201d means DoD met, controls run, evidence stored, approval recorded.',
+      '"Done" means DoD met, controls run, evidence stored, approval recorded.',
     ],
     mvpSetup: [
       'DoD per deliverable (checklist).',
-      'RACI AP recorded so sign-off doesn\u2019t stall.',
+      'RACI AP recorded so sign-off doesn't stall.',
       'QACE pack: controls register + evidence links + pass/warn/fail outcomes.',
     ],
     artefacts: [
@@ -202,11 +202,11 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
   },
   pillar6: {
     purpose:
-      'Replace vibes with indicators \u2014 make performance discussable.',
+      'Replace vibes with indicators  - make performance discussable.',
     outcome:
-      'A small \u201cPerformance Radar\u201d that shows delivery health and risk early.',
+      'A small "Performance Radar" that shows delivery health and risk early.',
     nonNegotiables: [
-      '5\u201310 KPIs max (anything more is theatre).',
+      '5-10 KPIs max (anything more is theatre).',
       'Every KPI has an owner, definition, and action rule (what you do when it moves).',
     ],
     mvpSetup: [
@@ -216,7 +216,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     artefacts: [
       'KPI dictionary (definitions, calculation logic, thresholds).',
       'KPI trend pack (weekly, same format, same recipients).',
-      'KPI-to-action mapping (\u201cif red then escalate to Noticeboard\u201d).',
+      'KPI-to-action mapping ("if red then escalate to Noticeboard").',
     ],
     signals: [],
     failureModes: [
@@ -233,8 +233,8 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Roles are covered, onboarding is fast, training is deliberate, resourcing choices are explicit.',
     nonNegotiables: [
       'No single points of failure for critical deliverables.',
-      'Time is budgeted \u2014 BAU capacity, change capacity, contingency capacity.',
-      '\u201cFunds\u201d (time/money) are allocated through visible prioritisation (not guilt).',
+      'Time is budgeted  - BAU capacity, change capacity, contingency capacity.',
+      '"Funds" (time/money) are allocated through visible prioritisation (not guilt).',
     ],
     mvpSetup: [
       'Role coverage map (primary/secondary cover).',
@@ -254,13 +254,13 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     failureModes: [
       'Hero culture.',
       'Undocumented tribal knowledge.',
-      '\u201cWe can just squeeze it in.\u201d',
+      '"We can just squeeze it in."',
     ],
     whereItLives: [],
   },
   pillar8: {
     purpose:
-      'Move fast inside guardrails \u2014 escalate by exception, zero surprises.',
+      'Move fast inside guardrails  - escalate by exception, zero surprises.',
     outcome:
       'Risks, dependencies, and issues are tracked to closure with clear owners and decisions.',
     nonNegotiables: [
@@ -285,13 +285,13 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     failureModes: [
       'Risks in heads not registers.',
       'Issues reopened repeatedly.',
-      '\u201cWe\u2019ll explain it in committee.\u201d',
+      '"We'll explain it in committee."',
     ],
     whereItLives: [],
   },
   pillar9: {
     purpose:
-      'Pre-wire, align, unblock \u2014 joined-up delivery across Finance/Actuarial/Audit.',
+      'Pre-wire, align, unblock  - joined-up delivery across Finance/Actuarial/Audit.',
     outcome:
       'Fewer late-stage fights because expectations and approval pathways are explicit.',
     nonNegotiables: [
@@ -305,7 +305,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     artefacts: [
       'Stakeholder register + RACI AP per deliverable.',
       'Dependency tracker for upstream inputs.',
-      '\u201cWhat changed and why\u201d summaries linked to evidence.',
+      '"What changed and why" summaries linked to evidence.',
     ],
     signals: [
       'Missed dependencies',
@@ -326,12 +326,12 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'A pragmatic, supportable toolchain with clear ownership and upgrade pathway.',
     nonNegotiables: [
       'Tools serve the operating model (not the other way around).',
-      'Monitoring and logging are part of \u201cdone\u201d.',
+      'Monitoring and logging are part of "done".',
       'Changes to tech follow the same Approval Framework and evidence rules as numbers.',
     ],
     mvpSetup: [
-      'Adopt the TOM tool mapping as your \u201cdefault stack\u201d (Teams, Lists, SharePoint, Planner, Power Automate, Power BI, Excel where needed).',
-      'Channels I\u2013V as the collaboration backbone (Noticeboard, ICP, Delivery, QACE, ORM).',
+      'Adopt the TOM tool mapping as your "default stack" (Teams, Lists, SharePoint, Planner, Power Automate, Power BI, Excel where needed).',
+      'Channels I-V as the collaboration backbone (Noticeboard, ICP, Delivery, QACE, ORM).',
     ],
     artefacts: [
       'Tooling Upgrade Path (roadmap, owners, change windows).',
@@ -347,7 +347,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     failureModes: [
       'Shadow tooling.',
       'Brittle one-off scripts.',
-      '\u201cIt ran last month\u201d as the test plan.',
+      '"It ran last month" as the test plan.',
     ],
     whereItLives: [],
   },
