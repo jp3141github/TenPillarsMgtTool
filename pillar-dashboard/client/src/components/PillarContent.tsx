@@ -36,13 +36,13 @@ interface PillarSection {
 const PILLAR_CONTENT: Record<string, PillarSection> = {
   pillar1: {
     purpose:
-      'Keep the production line moving \u2014 predictable delivery, no heroics.',
+      'Keep the production line moving - predictable delivery, no heroics.',
     outcome:
-      'One integrated critical path across Lloyd\u2019s, Group, IFRS 17 \u2014 with explicit cut-offs and visible ownership.',
+      'One integrated critical path across Lloyd\u2019s, Group, IFRS 17 - with explicit cut-offs and visible ownership.',
     nonNegotiables: [
       'One close plan (not 3 parallel projects).',
       'Work starts only when triaged and owned (no \u201cdrive-bys\u201d).',
-      'WIP discipline \u2014 finish before starting more.',
+      'WIP discipline - finish before starting more.',
     ],
     mvpSetup: [
       'Intake front door + triage (ICP).',
@@ -74,7 +74,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
   },
   pillar2: {
     purpose:
-      'Make each close cheaper, safer, faster \u2014 deliberately (not by \u201cworking harder\u201d).',
+      'Make each close cheaper, safer, faster - deliberately (not by \u201cworking harder\u201d).',
     outcome:
       'Improvements land weekly, tracked like real work, measured for impact.',
     nonNegotiables: [
@@ -107,11 +107,11 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
   },
   pillar3: {
     purpose:
-      'Control the narrative internally \u2014 reduce churn, reduce pinging, speed up decisions.',
+      'Control the narrative internally - reduce churn, reduce pinging, speed up decisions.',
     outcome:
       'Leadership gets a stable story they can challenge and sign.',
     nonNegotiables: [
-      'One published truth source (Noticeboard ABCD) \u2014 debate happens elsewhere.',
+      'One published truth source (Noticeboard ABCD) - debate happens elsewhere.',
       '\u201cOne-page story\u201d per deliverable: what moved, why, so what, actions.',
       'Cadence beats ad-hoc chaos (daily pulse in close week, weekly RCC snapshot).',
     ],
@@ -170,7 +170,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
   },
   pillar5: {
     purpose:
-      'Make trust automatic \u2014 audit-ready by default, not by scramble.',
+      'Make trust automatic - audit-ready by default, not by scramble.',
     outcome:
       'Every run produces an evidence pack, every number has lineage, every change has approval.',
     nonNegotiables: [
@@ -202,11 +202,11 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
   },
   pillar6: {
     purpose:
-      'Replace vibes with indicators \u2014 make performance discussable.',
+      'Replace vibes with indicators - make performance discussable.',
     outcome:
       'A small \u201cPerformance Radar\u201d that shows delivery health and risk early.',
     nonNegotiables: [
-      '5\u201310 KPIs max (anything more is theatre).',
+      '5-10 KPIs max (anything more is theatre).',
       'Every KPI has an owner, definition, and action rule (what you do when it moves).',
     ],
     mvpSetup: [
@@ -233,7 +233,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Roles are covered, onboarding is fast, training is deliberate, resourcing choices are explicit.',
     nonNegotiables: [
       'No single points of failure for critical deliverables.',
-      'Time is budgeted \u2014 BAU capacity, change capacity, contingency capacity.',
+      'Time is budgeted - BAU capacity, change capacity, contingency capacity.',
       '\u201cFunds\u201d (time/money) are allocated through visible prioritisation (not guilt).',
     ],
     mvpSetup: [
@@ -260,7 +260,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
   },
   pillar8: {
     purpose:
-      'Move fast inside guardrails \u2014 escalate by exception, zero surprises.',
+      'Move fast inside guardrails - escalate by exception, zero surprises.',
     outcome:
       'Risks, dependencies, and issues are tracked to closure with clear owners and decisions.',
     nonNegotiables: [
@@ -291,7 +291,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
   },
   pillar9: {
     purpose:
-      'Pre-wire, align, unblock \u2014 joined-up delivery across Finance/Actuarial/Audit.',
+      'Pre-wire, align, unblock - joined-up delivery across Finance/Actuarial/Audit.',
     outcome:
       'Fewer late-stage fights because expectations and approval pathways are explicit.',
     nonNegotiables: [
@@ -331,7 +331,7 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
     ],
     mvpSetup: [
       'Adopt the TOM tool mapping as your \u201cdefault stack\u201d (Teams, Lists, SharePoint, Planner, Power Automate, Power BI, Excel where needed).',
-      'Channels I\u2013V as the collaboration backbone (Noticeboard, ICP, Delivery, QACE, ORM).',
+      'Channels I-V as the collaboration backbone (Noticeboard, ICP, Delivery, QACE, ORM).',
     ],
     artefacts: [
       'Tooling Upgrade Path (roadmap, owners, change windows).',
