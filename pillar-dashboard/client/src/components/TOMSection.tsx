@@ -335,7 +335,7 @@ export default function TOMSection({ onOpenChannel }: TOMSectionProps) {
       {/* 15 Stages */}
       <div>
         <h3 className="text-lg font-semibold text-foreground mb-4">The 15 Stages</h3>
-        <Accordion type="multiple" className="space-y-3">
+        <Accordion type="multiple" defaultValue={TOM_STAGES.map(s => `stage-${s.id}`)} className="space-y-3">
           {TOM_STAGES.map(stage => (
             <AccordionItem
               key={stage.id}

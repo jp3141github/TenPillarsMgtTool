@@ -486,7 +486,7 @@ export default function PillarContent({
           {/* Accordion sections */}
           <Accordion
             type="multiple"
-            defaultValue={['nonNegotiables', 'mvpSetup']}
+            defaultValue={['nonNegotiables', 'mvpSetup', 'artefacts', 'signals', 'failureModes', 'whereItLives']}
             className="space-y-2"
           >
             {sectionConfig
