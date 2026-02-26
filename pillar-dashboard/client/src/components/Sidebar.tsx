@@ -39,6 +39,7 @@ interface SidebarProps {
   onSelectView?: (view: 'pillars' | 'tom' | 'corporate') => void;
   openChannelNumber?: string | null;
   onOpenChannel?: (channelNumber: string) => void;
+  onShowStages?: () => void;
 }
 
 export default function Sidebar({
@@ -53,6 +54,7 @@ export default function Sidebar({
   onSelectView,
   openChannelNumber,
   onOpenChannel,
+  onShowStages,
 }: SidebarProps) {
   return (
     <div className="w-72 h-full bg-card border-r border-border flex flex-col flex-shrink-0">
@@ -122,6 +124,13 @@ export default function Sidebar({
             >
               <span className="text-lg">🏗️</span>
               <span className="flex-1 text-left truncate">TOM (15 Stages)</span>
+            </button>
+            <button
+              onClick={() => onShowStages?.()}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors text-foreground hover:bg-muted"
+            >
+              <span className="text-lg">📋</span>
+              <span className="flex-1 text-left truncate">15 Stages Quick View</span>
             </button>
           </nav>
 
