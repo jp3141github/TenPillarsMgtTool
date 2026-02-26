@@ -12,6 +12,7 @@ import CSVImportModal from '@/components/CSVImportModal';
 import BulkCSVImportModal from '@/components/BulkCSVImportModal';
 import TOMSection from '@/components/TOMSection';
 import CorporateMode from '@/components/CorporateMode';
+import StagesModal from '@/components/StagesModal';
 import TeamsChannelChat from '@/components/TeamsChannelChat';
 import PillarContent, { OperatingRuleBanner, GlobalFooter } from '@/components/PillarContent';
 import { DashboardData, List as DataList, ChannelMessage, ChannelInfo } from '@/lib/types';
@@ -80,6 +81,7 @@ export default function Dashboard() {
   const [editingListIndex, setEditingListIndex] = useState<number | null>(null);
   const [showCSVModal, setShowCSVModal] = useState(false);
   const [showBulkCSVModal, setShowBulkCSVModal] = useState(false);
+  const [showStagesModal, setShowStagesModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Channel chat state
@@ -478,6 +480,9 @@ export default function Dashboard() {
     onOpenChannel: isMobile
       ? (channelNumber: string) => { handleOpenChannel(channelNumber); setMobileSidebarOpen(false); }
       : handleOpenChannel,
+    onShowStages: isMobile
+      ? () => { setShowStagesModal(true); setMobileSidebarOpen(false); }
+      : () => setShowStagesModal(true),
   };
 
   // Content area (shared between desktop and mobile)
@@ -833,6 +838,11 @@ export default function Dashboard() {
         open={showBulkCSVModal}
         onOpenChange={setShowBulkCSVModal}
         onImport={handleBulkCSVUpload}
+      />
+
+      <StagesModal
+        open={showStagesModal}
+        onOpenChange={setShowStagesModal}
       />
     </div>
   );
