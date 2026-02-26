@@ -26,7 +26,7 @@ The repository includes a `netlify.toml` at the root that configures the build a
 2. Click "Add new site" → "Import an existing project"
 3. Select GitHub and authorize Netlify
 4. Choose your repository
-5. Build settings will be auto-detected from `netlify.toml` — no manual configuration needed
+5. Build settings will be auto-detected from `netlify.toml` - no manual configuration needed
 6. Click "Deploy site"
 
 #### Option B: Using Netlify CLI
@@ -97,7 +97,7 @@ pnpm preview
 - Check build logs in Netlify dashboard
 - Ensure Node version is 22.x or higher
 - Verify `pnpm` is available in build environment
-- Ensure the `netlify.toml` at the repository root is present — it configures the base directory, build command, and publish directory automatically
+- Ensure the `netlify.toml` at the repository root is present - it configures the base directory, build command, and publish directory automatically
 
 **Data not persisting**
 - Dashboard uses browser localStorage
