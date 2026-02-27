@@ -6,6 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { renderWithAbcd } from './AbcdTooltip';
 
 interface TOMStage {
   id: number;
@@ -320,7 +321,7 @@ export default function TOMSection({ onOpenChannel }: TOMSectionProps) {
                   <Badge className={CHANNEL_COLORS[ch.number]}>
                     {ch.number}
                   </Badge>
-                  <span className="font-semibold text-sm text-foreground">{ch.name}</span>
+                  <span className="font-semibold text-sm text-foreground">{renderWithAbcd(ch.name)}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{ch.description}</p>
               </CardContent>
