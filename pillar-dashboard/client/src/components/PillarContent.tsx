@@ -9,6 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { renderWithAbcd } from './AbcdTooltip';
 import {
   ChevronDown,
   ChevronUp,
@@ -544,7 +545,7 @@ export default function PillarContent({
                               className="text-sm text-foreground/80 flex items-start gap-2"
                             >
                               <span className="text-muted-foreground mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-current" />
-                              {item}
+                              {renderWithAbcd(item)}
                             </li>
                           ))}
                         </ul>
