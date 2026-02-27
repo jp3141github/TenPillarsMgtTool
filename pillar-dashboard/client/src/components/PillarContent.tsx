@@ -103,7 +103,11 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'No owners.',
       'No measurement.',
     ],
-    whereItLives: [],
+    whereItLives: [
+      'CIP backlog + retro visibility in Channel I (Noticeboard).',
+      'TUP backlog + automation progress in Channel III (Delivery).',
+      'Lessons learned linked to evidence in SharePoint.',
+    ],
   },
   pillar3: {
     purpose:
@@ -134,7 +138,11 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Threads with attachments-with-no-home.',
       'Decisions with no record.',
     ],
-    whereItLives: [],
+    whereItLives: [
+      'ABCD status posts in Channel I (Noticeboard).',
+      'RCC minutes and exec summaries in Channel I.',
+      'Committee packs and change posts linked to SharePoint evidence.',
+    ],
   },
   pillar4: {
     purpose:
@@ -166,7 +174,11 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Silent schema changes.',
       '"Works on my machine" pipelines.',
     ],
-    whereItLives: [],
+    whereItLives: [
+      'I/O Register (IOR) tracked in Channel III (Delivery).',
+      'DQ check results and evidence in Channel IV (QACE).',
+      'Data dictionaries and lineage maps stored in SharePoint.',
+    ],
   },
   pillar5: {
     purpose:
@@ -198,7 +210,11 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Missing evidence links.',
       'Undocumented exceptions.',
     ],
-    whereItLives: [],
+    whereItLives: [
+      'DoD checklists and QACE packs in Channel IV (QACE).',
+      'RACI AP and sign-off log in Channel III (Delivery).',
+      'Evidence files stored in SharePoint, linked from controls register.',
+    ],
   },
   pillar6: {
     purpose:
@@ -224,7 +240,11 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Inconsistent definitions.',
       'Dashboards nobody uses.',
     ],
-    whereItLives: [],
+    whereItLives: [
+      'KPI snapshots broadcast in Channel I (Noticeboard).',
+      'Performance Radar (PR) dashboard in Power BI / Excel.',
+      'KPI trend packs fed into RCC agenda in Channel I.',
+    ],
   },
   pillar7: {
     purpose:
@@ -256,7 +276,11 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Undocumented tribal knowledge.',
       '"We can just squeeze it in."',
     ],
-    whereItLives: [],
+    whereItLives: [
+      'Role coverage and capacity planning in Channel III (Delivery).',
+      'Training plans tied to ORM in Channel V.',
+      'Onboarding packs and handover notes in SharePoint.',
+    ],
   },
   pillar8: {
     purpose:
@@ -287,7 +311,11 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Issues reopened repeatedly.',
       "\"We'll explain it in committee.\"",
     ],
-    whereItLives: [],
+    whereItLives: [
+      'Risk & dependency register reviewed as RCC agenda item in Channel I.',
+      'Issue log and incidents routed via ICP in Channel II.',
+      'Incident playbooks and recovery actions in Channel V (ORM).',
+    ],
   },
   pillar9: {
     purpose:
@@ -317,7 +345,12 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Unmanaged expectations.',
       'Approvals by inbox archaeology.',
     ],
-    whereItLives: [],
+    whereItLives: [
+      'Stakeholder register and RACI AP in Channel III (Delivery).',
+      'Cross-team handoffs coordinated via CTI in Channel III.',
+      'Dependency tracker and queries log in Lists.',
+      '"What changed and why" summaries broadcast in Channel I (Noticeboard).',
+    ],
   },
   pillar10: {
     purpose:
@@ -349,7 +382,12 @@ const PILLAR_CONTENT: Record<string, PillarSection> = {
       'Brittle one-off scripts.',
       '"It ran last month" as the test plan.',
     ],
-    whereItLives: [],
+    whereItLives: [
+      'TUP (Tooling Upgrade Path) backlog in Channel III (Delivery).',
+      'Automation run logs and monitoring in Channel III.',
+      'Integration maps and run monitoring checklists in SharePoint.',
+      'Channels I-V as the collaboration backbone across all pillars.',
+    ],
   },
 };
 

@@ -162,15 +162,19 @@ export default function Sidebar({
               <button
                 key={ch.number}
                 onClick={() => onOpenChannel?.(ch.number)}
+                title={ch.description}
                 className={cn(
-                  'w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                  'w-full flex items-start gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
                   openChannelNumber === ch.number
                     ? `${SIDEBAR_CHANNEL_ACTIVE[ch.number]} border-l-2`
                     : 'text-foreground hover:bg-muted'
                 )}
               >
-                <Hash className={cn('w-3.5 h-3.5 shrink-0', SIDEBAR_CHANNEL_COLORS[ch.number])} />
-                <span className="flex-1 text-left truncate text-xs">{ch.number} - {ch.name}</span>
+                <Hash className={cn('w-3.5 h-3.5 shrink-0 mt-0.5', SIDEBAR_CHANNEL_COLORS[ch.number])} />
+                <div className="flex-1 text-left min-w-0">
+                  <span className="block truncate text-xs">{ch.number} - {ch.name}</span>
+                  <span className="block truncate text-[10px] text-muted-foreground font-normal">{ch.description}</span>
+                </div>
               </button>
             ))}
           </nav>
