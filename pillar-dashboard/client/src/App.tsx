@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import Dashboard from "@/pages/Dashboard";
+import ObsidianFramework from "./components/ObsidianFramework";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -20,9 +21,15 @@ function Router() {
   );
 }
 
-function AppToggle({ activeApp, onToggle }: { activeApp: 'pillars' | 'ms365'; onToggle: (app: 'pillars' | 'ms365') => void }) {
+function AppToggle({ activeApp, onToggle }: { activeApp: 'pillars' | 'ms365' | 'obsidian'; onToggle: (app: 'pillars' | 'ms365' | 'obsidian') => void }) {
   const { layout } = useLayout();
   const isMobile = layout === 'mobile';
+
+  const tabs: { key: 'pillars' | 'ms365' | 'obsidian'; label: string }[] = [
+    { key: 'pillars', label: '10 Pillars' },
+    { key: 'obsidian', label: 'Framework' },
+    { key: 'ms365', label: 'MS 365 Tools' },
+  ];
 
   return (
     <div style={{
@@ -40,44 +47,31 @@ function AppToggle({ activeApp, onToggle }: { activeApp: 'pillars' | 'ms365'; on
       gap: 2,
       boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
     }}>
-      <button
-        onClick={() => onToggle('pillars')}
-        style={{
-          padding: '5px 14px',
-          borderRadius: 9999,
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          border: 'none',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-          background: activeApp === 'pillars' ? '#3b82f6' : 'transparent',
-          color: activeApp === 'pillars' ? '#fff' : '#94a3b8',
-        }}
-      >
-        10 Pillars
-      </button>
-      <button
-        onClick={() => onToggle('ms365')}
-        style={{
-          padding: '5px 14px',
-          borderRadius: 9999,
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          border: 'none',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-          background: activeApp === 'ms365' ? '#3b82f6' : 'transparent',
-          color: activeApp === 'ms365' ? '#fff' : '#94a3b8',
-        }}
-      >
-        MS 365 Tools
-      </button>
+      {tabs.map(tab => (
+        <button
+          key={tab.key}
+          onClick={() => onToggle(tab.key)}
+          style={{
+            padding: '5px 14px',
+            borderRadius: 9999,
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            background: activeApp === tab.key ? '#3b82f6' : 'transparent',
+            color: activeApp === tab.key ? '#fff' : '#94a3b8',
+          }}
+        >
+          {tab.label}
+        </button>
+      ))}
     </div>
   );
 }
 
 function App() {
-  const [activeApp, setActiveApp] = useState<'pillars' | 'ms365'>('pillars');
+  const [activeApp, setActiveApp] = useState<'pillars' | 'ms365' | 'obsidian'>('pillars');
 
   return (
     <ErrorBoundary>
@@ -91,6 +85,10 @@ function App() {
             <AppToggle activeApp={activeApp} onToggle={setActiveApp} />
             {activeApp === 'pillars' ? (
               <Router />
+            ) : activeApp === 'obsidian' ? (
+              <div style={{ paddingTop: 48 }}>
+                <ObsidianFramework />
+              </div>
             ) : (
               <iframe
                 src="/ms365tools.html"
