@@ -2,6 +2,7 @@ import { Pillar, DashboardData, ChannelInfo } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Hash } from 'lucide-react';
 import PillarChart from './PillarChart';
+import { renderWithAbcd } from './AbcdTooltip';
 
 const SIDEBAR_CHANNELS: ChannelInfo[] = [
   { number: 'I', name: 'Noticeboard (ABCD)', description: 'Exec-facing broadcast layer' },
@@ -172,7 +173,7 @@ export default function Sidebar({
               >
                 <Hash className={cn('w-3.5 h-3.5 shrink-0 mt-0.5', SIDEBAR_CHANNEL_COLORS[ch.number])} />
                 <div className="flex-1 text-left min-w-0">
-                  <span className="block truncate text-xs">{ch.number} - {ch.name}</span>
+                  <span className="block truncate text-xs">{ch.number} - {renderWithAbcd(ch.name)}</span>
                   <span className="block truncate text-[10px] text-muted-foreground font-normal">{ch.description}</span>
                 </div>
               </button>
