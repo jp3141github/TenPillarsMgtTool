@@ -89,19 +89,19 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <AppToggle activeApp={activeApp} onToggle={setActiveApp} />
-            {activeApp === 'pillars' ? (
+            <div style={{ display: activeApp === 'pillars' ? 'block' : 'none' }}>
               <Router />
-            ) : (
-              <iframe
-                src="/ms365tools.html"
-                title="MS 365 Tools"
-                style={{
-                  width: '100%',
-                  height: '100vh',
-                  border: 'none',
-                }}
-              />
-            )}
+            </div>
+            <iframe
+              src="/ms365tools.html"
+              title="MS 365 Tools"
+              style={{
+                width: '100%',
+                height: '100vh',
+                border: 'none',
+                display: activeApp === 'ms365' ? 'block' : 'none',
+              }}
+            />
           </TooltipProvider>
         </LayoutProvider>
       </ThemeProvider>
