@@ -83,23 +83,22 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <AppToggle activeApp={activeApp} onToggle={setActiveApp} />
-            {activeApp === 'pillars' ? (
+            <div style={{ display: activeApp === 'pillars' ? 'block' : 'none' }}>
               <Router />
-            ) : activeApp === 'obsidian' ? (
-              <div style={{ paddingTop: 48 }}>
-                <ObsidianFramework />
-              </div>
-            ) : (
-              <iframe
-                src="/ms365tools.html"
-                title="MS 365 Tools"
-                style={{
-                  width: '100%',
-                  height: '100vh',
-                  border: 'none',
-                }}
-              />
-            )}
+            </div>
+            <div style={{ display: activeApp === 'obsidian' ? 'block' : 'none', paddingTop: 48 }}>
+              <ObsidianFramework />
+            </div>
+            <iframe
+              src="/ms365tools.html"
+              title="MS 365 Tools"
+              style={{
+                width: '100%',
+                height: '100vh',
+                border: 'none',
+                display: activeApp === 'ms365' ? 'block' : 'none',
+              }}
+            />
           </TooltipProvider>
         </LayoutProvider>
       </ThemeProvider>
