@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ChevronRight,
   ChevronDown,
   Hash,
   Link2,
   Layers,
+  ChevronsDownUp,
+  ChevronsUpDown,
 } from 'lucide-react';
 
 /* ───────── Data ───────── */
@@ -202,14 +204,20 @@ function Callout({
   children,
   defaultOpen = false,
   accentColor,
+  expanded,
 }: {
   title: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
   defaultOpen?: boolean;
   accentColor?: string;
+  expanded?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+
+  useEffect(() => {
+    if (expanded !== undefined) setOpen(expanded);
+  }, [expanded]);
   return (
     <div
       style={{ borderLeft: `3px solid ${accentColor || '#6366f1'}` }}
@@ -234,8 +242,12 @@ function Callout({
 
 /* ───────── Pillar Note ───────── */
 
-function PillarNote({ pillar }: { pillar: PillarData }) {
-  const [open, setOpen] = useState(false);
+function PillarNote({ pillar, expanded }: { pillar: PillarData; expanded?: boolean }) {
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    if (expanded !== undefined) setOpen(expanded);
+  }, [expanded]);
 
   return (
     <div className="border border-border rounded-lg bg-card overflow-hidden">
@@ -331,8 +343,12 @@ function PillarNote({ pillar }: { pillar: PillarData }) {
 
 /* ───────── Stage Row ───────── */
 
-function StageRow({ stage }: { stage: StageData }) {
-  const [open, setOpen] = useState(false);
+function StageRow({ stage, expanded }: { stage: StageData; expanded?: boolean }) {
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    if (expanded !== undefined) setOpen(expanded);
+  }, [expanded]);
   const color = CHANNEL_BADGE[stage.channelNumber] || '#6366f1';
 
   return (
@@ -414,6 +430,8 @@ function StageRow({ stage }: { stage: StageData }) {
 /* ───────── Main Component ───────── */
 
 export default function ObsidianFramework() {
+  const [allExpanded, setAllExpanded] = useState(true);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       {/* Title block - Obsidian note style */}
@@ -422,9 +440,27 @@ export default function ObsidianFramework() {
           <Layers className="w-3.5 h-3.5" />
           <span>framework / ten-pillars-fifteen-stages</span>
         </div>
-        <h1 className="text-2xl font-bold text-foreground">
-          10 Pillars & 15 Stages Framework
-        </h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold text-foreground">
+            10 Pillars & 15 Stages Framework
+          </h1>
+          <button
+            onClick={() => setAllExpanded(prev => !prev)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-card text-xs font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors shrink-0"
+          >
+            {allExpanded ? (
+              <>
+                <ChevronsDownUp className="w-3.5 h-3.5" />
+                Collapse All
+              </>
+            ) : (
+              <>
+                <ChevronsUpDown className="w-3.5 h-3.5" />
+                Expand All
+              </>
+            )}
+          </button>
+        </div>
         <p className="text-muted-foreground text-sm">
           A single-page reference linking the 10 operating priorities (pillars) to the
           15-stage implementation checklist (TOM). Pillars answer <em>"why / what good
@@ -437,6 +473,7 @@ export default function ObsidianFramework() {
         title="Operating Rules (Non-Negotiable)"
         accentColor="#6366f1"
         defaultOpen
+        expanded={allExpanded}
       >
         <div className="space-y-1.5 text-muted-foreground">
           <p>
@@ -458,7 +495,7 @@ export default function ObsidianFramework() {
       </Callout>
 
       {/* Channels quick reference */}
-      <Callout title="Teams Channels" accentColor="#3b82f6" defaultOpen>
+      <Callout title="Teams Channels" accentColor="#3b82f6" defaultOpen expanded={allExpanded}>
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
           {[
             { n: 'I', label: 'Noticeboard' },
@@ -492,11 +529,11 @@ export default function ObsidianFramework() {
           Pillars
         </h2>
         <p className="text-sm text-muted-foreground">
-          The operating priorities - click to expand details and see linked stages.
+          The operating priorities - click any header to toggle details.
         </p>
         <div className="space-y-2">
           {PILLARS.map(pillar => (
-            <PillarNote key={pillar.id} pillar={pillar} />
+            <PillarNote key={pillar.id} pillar={pillar} expanded={allExpanded} />
           ))}
         </div>
       </div>
@@ -514,7 +551,7 @@ export default function ObsidianFramework() {
         </p>
         <div className="space-y-2">
           {STAGES.map(stage => (
-            <StageRow key={stage.id} stage={stage} />
+            <StageRow key={stage.id} stage={stage} expanded={allExpanded} />
           ))}
         </div>
       </div>
