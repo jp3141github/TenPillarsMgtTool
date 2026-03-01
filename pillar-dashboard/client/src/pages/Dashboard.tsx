@@ -15,6 +15,7 @@ import CorporateMode from '@/components/CorporateMode';
 import StagesModal from '@/components/StagesModal';
 import TeamsChannelChat from '@/components/TeamsChannelChat';
 import TeamsSetupGuide from '@/components/TeamsSetupGuide';
+import TeamsAllGuides from '@/components/TeamsAllGuides';
 import PillarContent, { OperatingRuleBanner, GlobalFooter } from '@/components/PillarContent';
 import { DashboardData, List as DataList, ChannelMessage, ChannelInfo } from '@/lib/types';
 import { DEFAULT_PILLARS, saveData, loadData, getStorageUsage } from '@/lib/storage';
@@ -89,17 +90,26 @@ export default function Dashboard() {
   const [openChannelNumber, setOpenChannelNumber] = useState<string | null>(null);
   const [channelMessages, setChannelMessages] = useState<Record<string, ChannelMessage[]>>(() => loadChannelMessages());
   const [showSetupGuide, setShowSetupGuide] = useState(false);
+  const [showAllGuides, setShowAllGuides] = useState(false);
 
   const openChannel = CHANNELS.find(ch => ch.number === openChannelNumber) || null;
 
   const handleOpenChannel = useCallback((channelNumber: string) => {
     setShowSetupGuide(false);
+    setShowAllGuides(false);
     setOpenChannelNumber(prev => prev === channelNumber ? null : channelNumber);
   }, []);
 
   const handleShowSetupGuide = useCallback(() => {
     setOpenChannelNumber(null);
+    setShowAllGuides(false);
     setShowSetupGuide(prev => !prev);
+  }, []);
+
+  const handleShowAllGuides = useCallback(() => {
+    setOpenChannelNumber(null);
+    setShowSetupGuide(false);
+    setShowAllGuides(prev => !prev);
   }, []);
 
   const handleSendMessage = useCallback((channelNumber: string, text: string) => {
@@ -119,6 +129,7 @@ export default function Dashboard() {
   const handleCloseChannel = useCallback(() => {
     setOpenChannelNumber(null);
     setShowSetupGuide(false);
+    setShowAllGuides(false);
   }, []);
 
   // Undo/redo history
@@ -496,6 +507,10 @@ export default function Dashboard() {
     onShowSetupGuide: isMobile
       ? () => { handleShowSetupGuide(); setMobileSidebarOpen(false); }
       : handleShowSetupGuide,
+    showAllGuides,
+    onShowAllGuides: isMobile
+      ? () => { handleShowAllGuides(); setMobileSidebarOpen(false); }
+      : handleShowAllGuides,
   };
 
   // Content area (shared between desktop and mobile)
@@ -812,10 +827,13 @@ export default function Dashboard() {
       {!isMobile && showSetupGuide && (
         <TeamsSetupGuide onClose={handleCloseChannel} />
       )}
+      {!isMobile && showAllGuides && (
+        <TeamsAllGuides onClose={handleCloseChannel} onOpenChannel={handleOpenChannel} />
+      )}
       {isMobile && (
-        <Sheet open={!!openChannel || showSetupGuide} onOpenChange={(open) => { if (!open) handleCloseChannel(); }}>
+        <Sheet open={!!openChannel || showSetupGuide || showAllGuides} onOpenChange={(open) => { if (!open) handleCloseChannel(); }}>
           <SheetContent side="right" className="w-full sm:max-w-full p-0 [&>button:last-child]:hidden">
-            <SheetTitle className="sr-only">{showSetupGuide ? 'Getting Started' : 'Channel Chat'}</SheetTitle>
+            <SheetTitle className="sr-only">{showAllGuides ? 'Channel Guides' : showSetupGuide ? 'Getting Started' : 'Channel Chat'}</SheetTitle>
             {openChannel && (
               <TeamsChannelChat
                 channel={openChannel}
@@ -827,6 +845,9 @@ export default function Dashboard() {
             )}
             {showSetupGuide && (
               <TeamsSetupGuide onClose={handleCloseChannel} isMobile />
+            )}
+            {showAllGuides && (
+              <TeamsAllGuides onClose={handleCloseChannel} onOpenChannel={handleOpenChannel} isMobile />
             )}
           </SheetContent>
         </Sheet>
