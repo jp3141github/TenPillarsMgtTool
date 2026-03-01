@@ -1,6 +1,6 @@
 import { Pillar, DashboardData, ChannelInfo } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Hash, Rocket } from 'lucide-react';
+import { Hash, Rocket, BookOpen } from 'lucide-react';
 import PillarChart from './PillarChart';
 import { renderWithAbcd } from './AbcdTooltip';
 
@@ -43,6 +43,8 @@ interface SidebarProps {
   onShowStages?: () => void;
   showSetupGuide?: boolean;
   onShowSetupGuide?: () => void;
+  showAllGuides?: boolean;
+  onShowAllGuides?: () => void;
 }
 
 export default function Sidebar({
@@ -60,6 +62,8 @@ export default function Sidebar({
   onShowStages,
   showSetupGuide,
   onShowSetupGuide,
+  showAllGuides,
+  onShowAllGuides,
 }: SidebarProps) {
   return (
     <div className="w-72 h-full bg-card border-r border-border flex flex-col flex-shrink-0">
@@ -176,6 +180,21 @@ export default function Sidebar({
               <div className="flex-1 text-left min-w-0">
                 <span className="block truncate text-xs">Getting Started</span>
                 <span className="block truncate text-[10px] text-muted-foreground font-normal">Week-1 setup + cadence</span>
+              </div>
+            </button>
+            <button
+              onClick={() => onShowAllGuides?.()}
+              className={cn(
+                'w-full flex items-start gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors mb-1',
+                showAllGuides
+                  ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                  : 'text-foreground hover:bg-muted'
+              )}
+            >
+              <BookOpen className="w-3.5 h-3.5 shrink-0 mt-0.5 text-primary" />
+              <div className="flex-1 text-left min-w-0">
+                <span className="block truncate text-xs">Channel Guides</span>
+                <span className="block truncate text-[10px] text-muted-foreground font-normal">All guides in one view</span>
               </div>
             </button>
             {SIDEBAR_CHANNELS.map(ch => (

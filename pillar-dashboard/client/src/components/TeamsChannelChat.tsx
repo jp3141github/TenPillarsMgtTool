@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { X, Send, Hash, ArrowLeft, HelpCircle, ChevronDown, ChevronUp, FileText, ListChecks, Clock } from 'lucide-react';
 import { ChannelMessage, ChannelInfo } from '@/lib/types';
 
-const CHANNEL_COLORS: Record<string, string> = {
+export const CHANNEL_COLORS: Record<string, string> = {
   'I': 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
   'II': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   'III': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
@@ -22,7 +22,7 @@ const CHANNEL_ACCENT: Record<string, string> = {
   'V': 'border-rose-400 dark:border-rose-600',
 };
 
-interface ChannelGuide {
+export interface ChannelGuide {
   purpose: string;
   whatGoesHere: string[];
   whatDoesNotGoHere: string[];
@@ -34,7 +34,7 @@ interface ChannelGuide {
   cadence: string;
 }
 
-const CHANNEL_GUIDES: Record<string, ChannelGuide> = {
+export const CHANNEL_GUIDES: Record<string, ChannelGuide> = {
   'I': {
     purpose: 'The exec-facing broadcast layer. This is the published truth - the single place leadership looks to understand what is Approved, Blocked, Changed, or Delivered (ABCD). Everything here links out to evidence; nothing lives only in this channel.',
     whatGoesHere: [
@@ -340,7 +340,7 @@ export default function TeamsChannelChat({ channel, messages, onSendMessage, onC
 
         {/* Expandable help guide */}
         {showGuide && CHANNEL_GUIDES[channel.number] && (
-          <div className="px-4 pb-3 space-y-3 text-xs border-t border-border/50 pt-3">
+          <div className="px-4 pb-3 space-y-3 text-xs border-t border-border/50 pt-3 overflow-y-auto max-h-[60vh]">
             {/* Purpose */}
             <div>
               <p className="font-semibold text-foreground mb-1">Purpose</p>
