@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Send, Hash, ArrowLeft, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Send, Hash, ArrowLeft, HelpCircle, ChevronDown, ChevronUp, FileText, ListChecks, Clock } from 'lucide-react';
 import { ChannelMessage, ChannelInfo } from '@/lib/types';
 
 const CHANNEL_COLORS: Record<string, string> = {
@@ -29,6 +29,9 @@ interface ChannelGuide {
   keyArtefacts: string[];
   tomStages: string[];
   tip: string;
+  postTemplate: string[];
+  setupSteps: string[];
+  cadence: string;
 }
 
 const CHANNEL_GUIDES: Record<string, ChannelGuide> = {
@@ -56,6 +59,21 @@ const CHANNEL_GUIDES: Record<string, ChannelGuide> = {
     ],
     tomStages: ['RCC (Review & Control Cycle)', 'PR (Performance Radar)', 'CIP (CI Pipeline)'],
     tip: 'ABCD = Approved / Blocked / Changed / Delivered. Every post should be tagged with one of these statuses. If leadership needs to know it, it goes here. If they don\'t, it doesn\'t.',
+    postTemplate: [
+      '[ABCD Status] - e.g. APPROVED / BLOCKED / CHANGED / DELIVERED',
+      'Subject: [What happened in one line]',
+      'Detail: [2-3 sentences with context]',
+      'Evidence: [Link to SharePoint / Lists / Planner]',
+      'Owner: [Who is accountable]',
+    ],
+    setupSteps: [
+      'Pin the ABCD legend post at the top of the channel.',
+      'Create a "Weekly Exec Summary" tab linking to the summary template.',
+      'Add a SharePoint tab for the Exceptions Tracker.',
+      'Set a recurring post reminder for the weekly RCC summary.',
+      'Grant read access to leadership; restrict posting to leads.',
+    ],
+    cadence: 'Weekly: exec summary + KPI snapshot. Ad-hoc: ABCD status posts as events occur. Monthly: RCC minutes and CIP visibility update.',
   },
   'II': {
     purpose: 'The only front door for work requests. If it isn\'t logged here, it isn\'t real work. This channel stops drive-bys and forces prioritisation decisions into daylight. Every request gets triaged, assigned, and tracked.',
@@ -78,6 +96,22 @@ const CHANNEL_GUIDES: Record<string, ChannelGuide> = {
     ],
     tomStages: ['ICP (Intake Control Point)'],
     tip: 'If ICP is porous, your operating model is fan-fiction. Every piece of work enters through this door - no exceptions. This is how you kill drive-bys and invisible work.',
+    postTemplate: [
+      'Request Type: [Incident / Change / Ad-hoc]',
+      'Requestor: [Name + team]',
+      'Description: [What is needed and why]',
+      'Urgency: [Critical / High / Medium / Low]',
+      'Due Date: [When it is needed by]',
+      'Linked Deliverable: [Which pillar or process this relates to]',
+    ],
+    setupSteps: [
+      'Create a Microsoft Lists "Requests Register" and add it as a tab.',
+      'Add columns: Request Type, Urgency, Owner, Due Date, Status, Decision.',
+      'Set up a Microsoft Forms intake form and link it to the channel via Power Automate.',
+      'Pin a "How to submit a request" post with the form link at the top.',
+      'Agree a triage SLA (e.g. all requests triaged within 24 hours).',
+    ],
+    cadence: 'Daily: triage new requests and update status. Weekly: review backlog and deferred items. Ongoing: redirect any DM or email requests into this channel.',
   },
   'III': {
     purpose: 'The production floor. This is where work gets done - tasks are tracked, blockers are surfaced, WIP discipline is enforced. Planner boards, delivery updates, and day-to-day operational coordination all live here.',
@@ -106,6 +140,23 @@ const CHANNEL_GUIDES: Record<string, ChannelGuide> = {
     ],
     tomStages: ['SDP (Service Delivery Portfolio)', 'RACI AP (RACI + Approval Pathway)', 'IOR (I/O Register)', 'Automation', 'TUP (Tooling Upgrade Path)', 'AL (Analytics Layer)', 'CTI (Cross-Team Integration)'],
     tip: 'This is the busiest channel. WIP discipline is key - finish before starting more. If a task is blocked, surface it here immediately so it can be resolved.',
+    postTemplate: [
+      'Task: [Name of deliverable or work item]',
+      'Status: [Not Started / In Progress / Blocked / Done]',
+      'Owner: [Who is doing the work]',
+      'Blocker: [None / describe the blocker]',
+      'Due: [Target completion date]',
+      'Update: [What changed since last update]',
+    ],
+    setupSteps: [
+      'Create a Planner board with buckets: Backlog, In Progress, Blocked, Done.',
+      'Add a Planner tab to the channel for at-a-glance delivery status.',
+      'Set WIP limits (e.g. max 3 items per person in "In Progress").',
+      'Create an I/O Register (Lists tab) mapping data inputs, outputs, and owners.',
+      'Pin the RACI matrix and approval pathway as a tab or top-level post.',
+      'Set up a weekly delivery standup cadence post.',
+    ],
+    cadence: 'Daily: update task statuses and surface blockers. Weekly: delivery standup review of board + WIP. As needed: CTI handoff coordination posts.',
   },
   'IV': {
     purpose: 'Controls and evidence. No "trust me bro." This channel is where you prove that work was done correctly - controls were run, evidence was stored, quality gates were passed. Audit-ready by default, not by scramble.',
@@ -132,6 +183,22 @@ const CHANNEL_GUIDES: Record<string, ChannelGuide> = {
     ],
     tomStages: ['DoD (Definition of Done)', 'QACE (QA Controls Evidence)'],
     tip: '"Done" means DoD met, controls run, evidence stored, and approval recorded. If any of those are missing, it isn\'t done. Sign-off via chat alone is a failure mode.',
+    postTemplate: [
+      'Deliverable: [Name of the item being signed off]',
+      'DoD Checklist: [Complete / Partial - link to checklist]',
+      'Controls Run: [Pass / Warn / Fail - link to control register]',
+      'Evidence Stored: [Yes - SharePoint link]',
+      'Reconciliation: [N/A / Complete - link to recon results]',
+      'Approval: [Pending / Approved by Name on Date]',
+    ],
+    setupSteps: [
+      'Create a Controls Register (Lists tab) with fields: Control, Result, Evidence Link, Date.',
+      'Build a DoD checklist template in Lists or SharePoint for each deliverable type.',
+      'Create a SharePoint document library for evidence packs with a standard folder structure.',
+      'Pin the "What counts as Done" definition post at the top of the channel.',
+      'Set up a decision/change log (Lists tab) for tracking what changed and who approved it.',
+    ],
+    cadence: 'Per deliverable: DoD + controls + evidence at completion. Weekly: review open items missing sign-off. Monthly: controls register health check.',
   },
   'V': {
     purpose: 'Runbooks, recovery playbooks, and operational knowledge. This is "how to not die at close" - the documentation that makes delivery repeatable, trainable, and resilient. Reduces key-person risk by getting knowledge out of heads and into structured pages.',
@@ -157,6 +224,23 @@ const CHANNEL_GUIDES: Record<string, ChannelGuide> = {
     ],
     tomStages: ['ORM (Operational Run Manual)', 'WPM (Workflow Process Maps)'],
     tip: 'If only one person knows how to do something, that\'s a risk, not a strength. Every critical process should have a runbook here that someone else can follow.',
+    postTemplate: [
+      'Runbook: [Process name]',
+      'Type: [Runbook / Playbook / Process Map / Known Issue]',
+      'Summary: [What this document covers in one sentence]',
+      'Link: [SharePoint / Wiki link to the full document]',
+      'Last Updated: [Date]',
+      'Owner: [Who maintains this document]',
+    ],
+    setupSteps: [
+      'Create a SharePoint site or document library for runbooks with a standard template.',
+      'Add a SharePoint tab to the channel linking to the runbook library.',
+      'Build an incident playbook with severity levels, escalation paths, and recovery steps.',
+      'Create a "Known Issues" list for recurring problems and their workarounds.',
+      'Schedule quarterly runbook reviews to keep documentation current.',
+      'Add onboarding materials as pinned references for new team members.',
+    ],
+    cadence: 'As needed: post new or updated runbooks. Quarterly: review and refresh all documentation. After incidents: update playbooks with lessons learned.',
   },
 };
 
@@ -316,6 +400,52 @@ export default function TeamsChannelChat({ channel, messages, onSendMessage, onC
                   </Badge>
                 ))}
               </div>
+            </div>
+
+            {/* Divider before how-to sections */}
+            <div className="border-t border-border/50 pt-3">
+              <p className="font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5" />
+                How to use this channel
+              </p>
+            </div>
+
+            {/* Post template */}
+            <div>
+              <p className="font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                <FileText className="w-3 h-3 text-muted-foreground" />
+                Post template
+              </p>
+              <div className="rounded-md bg-muted/50 border border-border p-2.5 space-y-0.5 font-mono">
+                {CHANNEL_GUIDES[channel.number].postTemplate.map((line, i) => (
+                  <p key={i} className="text-muted-foreground leading-relaxed">{line}</p>
+                ))}
+              </div>
+            </div>
+
+            {/* Setup steps */}
+            <div>
+              <p className="font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                <ListChecks className="w-3 h-3 text-muted-foreground" />
+                Setup steps
+              </p>
+              <ol className="space-y-1 list-none">
+                {CHANNEL_GUIDES[channel.number].setupSteps.map((step, i) => (
+                  <li key={i} className="text-muted-foreground flex items-start gap-1.5">
+                    <span className="text-blue-500 font-semibold shrink-0">{i + 1}.</span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            {/* Cadence */}
+            <div>
+              <p className="font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                <Clock className="w-3 h-3 text-muted-foreground" />
+                Cadence
+              </p>
+              <p className="text-muted-foreground leading-relaxed">{CHANNEL_GUIDES[channel.number].cadence}</p>
             </div>
           </div>
         )}
