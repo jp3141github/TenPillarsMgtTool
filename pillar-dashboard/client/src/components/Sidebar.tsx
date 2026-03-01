@@ -1,6 +1,6 @@
 import { Pillar, DashboardData, ChannelInfo } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Hash } from 'lucide-react';
+import { Hash, Rocket } from 'lucide-react';
 import PillarChart from './PillarChart';
 import { renderWithAbcd } from './AbcdTooltip';
 
@@ -41,6 +41,8 @@ interface SidebarProps {
   openChannelNumber?: string | null;
   onOpenChannel?: (channelNumber: string) => void;
   onShowStages?: () => void;
+  showSetupGuide?: boolean;
+  onShowSetupGuide?: () => void;
 }
 
 export default function Sidebar({
@@ -56,6 +58,8 @@ export default function Sidebar({
   openChannelNumber,
   onOpenChannel,
   onShowStages,
+  showSetupGuide,
+  onShowSetupGuide,
 }: SidebarProps) {
   return (
     <div className="w-72 h-full bg-card border-r border-border flex flex-col flex-shrink-0">
@@ -178,6 +182,21 @@ export default function Sidebar({
                 </div>
               </button>
             ))}
+            <button
+              onClick={() => onShowSetupGuide?.()}
+              className={cn(
+                'w-full flex items-start gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors mt-1',
+                showSetupGuide
+                  ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                  : 'text-foreground hover:bg-muted'
+              )}
+            >
+              <Rocket className="w-3.5 h-3.5 shrink-0 mt-0.5 text-primary" />
+              <div className="flex-1 text-left min-w-0">
+                <span className="block truncate text-xs">Getting Started</span>
+                <span className="block truncate text-[10px] text-muted-foreground font-normal">Week-1 setup + cadence</span>
+              </div>
+            </button>
           </nav>
         </div>
       </div>
