@@ -301,7 +301,7 @@ export default function TeamsChannelChat({ channel, messages, onSendMessage, onC
   };
 
   return (
-    <div className={`flex flex-col h-full bg-background ${isMobile ? 'w-full' : 'border-l border-border'}`} style={isMobile ? undefined : { width: 420 }}>
+    <div className={`flex flex-col h-full overflow-hidden bg-background ${isMobile ? 'w-full' : 'border-l border-border'}`} style={isMobile ? undefined : { width: 420 }}>
       {/* Channel Header */}
       <div className={`flex items-center justify-between px-4 py-3 border-b-2 ${CHANNEL_ACCENT[channel.number] || 'border-border'} bg-card`}>
         <div className="flex items-center gap-2 min-w-0">
@@ -323,7 +323,7 @@ export default function TeamsChannelChat({ channel, messages, onSendMessage, onC
       </div>
 
       {/* Channel description + help guide toggle */}
-      <div className="bg-muted/30 border-b border-border">
+      <div className="bg-muted/30 border-b border-border shrink-0 flex flex-col" style={{ maxHeight: '65vh' }}>
         <div className="px-4 py-2 flex items-center justify-between gap-2">
           <p className="text-xs text-muted-foreground flex-1">{channel.description}</p>
           <Button
@@ -340,7 +340,7 @@ export default function TeamsChannelChat({ channel, messages, onSendMessage, onC
 
         {/* Expandable help guide */}
         {showGuide && CHANNEL_GUIDES[channel.number] && (
-          <div className="px-4 pb-3 space-y-3 text-xs border-t border-border/50 pt-3 overflow-y-auto max-h-[60vh]">
+          <div className="px-4 pb-3 space-y-3 text-xs border-t border-border/50 pt-3 overflow-y-auto flex-1 min-h-0">
             {/* Purpose */}
             <div>
               <p className="font-semibold text-foreground mb-1">Purpose</p>

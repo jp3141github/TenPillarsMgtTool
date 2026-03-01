@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { X, ArrowLeft, Hash, BookOpen, ChevronDown, ChevronUp, FileText, ListChecks, Clock } from 'lucide-react';
 import { ChannelInfo } from '@/lib/types';
 import { CHANNEL_GUIDES, CHANNEL_COLORS } from './TeamsChannelChat';
@@ -46,7 +45,7 @@ export default function TeamsAllGuides({ onClose, isMobile, onOpenChannel }: Tea
   };
 
   return (
-    <div className={`flex flex-col h-full bg-background ${isMobile ? 'w-full' : 'border-l border-border'}`} style={isMobile ? undefined : { width: 480 }}>
+    <div className={`flex flex-col h-full overflow-hidden bg-background ${isMobile ? 'w-full' : 'border-l border-border'}`} style={isMobile ? undefined : { width: 480 }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b-2 border-primary bg-card">
         <div className="flex items-center gap-2 min-w-0">
@@ -75,7 +74,7 @@ export default function TeamsAllGuides({ onClose, isMobile, onOpenChannel }: Tea
       </div>
 
       {/* Scrollable guides content */}
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-y-auto">
         <div className="p-3 space-y-2">
           {CHANNELS.map(ch => {
             const guide = CHANNEL_GUIDES[ch.number];
@@ -224,7 +223,7 @@ export default function TeamsAllGuides({ onClose, isMobile, onOpenChannel }: Tea
             );
           })}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
