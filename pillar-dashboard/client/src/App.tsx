@@ -24,6 +24,7 @@ function Router() {
 function AppToggle({ activeApp, onToggle }: { activeApp: 'pillars' | 'ms365' | 'obsidian'; onToggle: (app: 'pillars' | 'ms365' | 'obsidian') => void }) {
   const { layout } = useLayout();
   const isMobile = layout === 'mobile';
+  const [expanded, setExpanded] = useState(false);
 
   const tabs: { key: 'pillars' | 'ms365' | 'obsidian'; label: string }[] = [
     { key: 'pillars', label: '10 Pillars' },
@@ -47,10 +48,34 @@ function AppToggle({ activeApp, onToggle }: { activeApp: 'pillars' | 'ms365' | '
       gap: 2,
       boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
     }}>
-      {tabs.map(tab => (
+      {/* +/- toggle button */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          width: 26,
+          height: 26,
+          borderRadius: '50%',
+          fontSize: '1rem',
+          fontWeight: 700,
+          border: 'none',
+          cursor: 'pointer',
+          background: '#3b82f6',
+          color: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: 1,
+          transition: 'transform 0.2s',
+        }}
+        title={expanded ? 'Hide app switcher' : 'Show app switcher'}
+      >
+        {expanded ? '\u2212' : '+'}
+      </button>
+      {/* Tabs shown only when expanded */}
+      {expanded && tabs.map(tab => (
         <button
           key={tab.key}
-          onClick={() => onToggle(tab.key)}
+          onClick={() => { onToggle(tab.key); setExpanded(false); }}
           style={{
             padding: '5px 14px',
             borderRadius: 9999,
