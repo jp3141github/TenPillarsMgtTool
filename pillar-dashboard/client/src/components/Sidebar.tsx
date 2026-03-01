@@ -163,6 +163,21 @@ export default function Sidebar({
             Teams Channels
           </div>
           <nav className="space-y-0.5">
+            <button
+              onClick={() => onShowSetupGuide?.()}
+              className={cn(
+                'w-full flex items-start gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors mb-1',
+                showSetupGuide
+                  ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                  : 'text-foreground hover:bg-muted'
+              )}
+            >
+              <Rocket className="w-3.5 h-3.5 shrink-0 mt-0.5 text-primary" />
+              <div className="flex-1 text-left min-w-0">
+                <span className="block truncate text-xs">Getting Started</span>
+                <span className="block truncate text-[10px] text-muted-foreground font-normal">Week-1 setup + cadence</span>
+              </div>
+            </button>
             {SIDEBAR_CHANNELS.map(ch => (
               <button
                 key={ch.number}
@@ -182,21 +197,6 @@ export default function Sidebar({
                 </div>
               </button>
             ))}
-            <button
-              onClick={() => onShowSetupGuide?.()}
-              className={cn(
-                'w-full flex items-start gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors mt-1',
-                showSetupGuide
-                  ? 'bg-primary/10 text-primary border-l-2 border-primary'
-                  : 'text-foreground hover:bg-muted'
-              )}
-            >
-              <Rocket className="w-3.5 h-3.5 shrink-0 mt-0.5 text-primary" />
-              <div className="flex-1 text-left min-w-0">
-                <span className="block truncate text-xs">Getting Started</span>
-                <span className="block truncate text-[10px] text-muted-foreground font-normal">Week-1 setup + cadence</span>
-              </div>
-            </button>
           </nav>
         </div>
       </div>
